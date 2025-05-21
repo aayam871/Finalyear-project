@@ -36,3 +36,22 @@
     transform: rotate(360deg);
   }
 }
+/* index.css or App.css */
+@keyframes rotateY {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(180deg);
+  }
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+  animation: rotateY 1s ease-in-out;
+}
+
+.rotate-y-0 {
+  transform: rotateY(0deg);
+  animation: rotateY 1s ease-in-out;
+}
