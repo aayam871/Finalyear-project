@@ -6,6 +6,9 @@ module.exports = {
       fontFamily: {
         sans: ["Poppins", "sans-serif"],
       },
+      rotate: {
+        y180: "180deg",
+      },
     },
   },
   plugins: [],

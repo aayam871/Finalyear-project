@@ -49,7 +49,6 @@ const Features = () => {
       ref={ref}
       className="relative overflow-hidden pt-28 pb-20 px-6 md:px-16 font-sans"
     >
-      
       <motion.div
         style={{
           y,
@@ -64,7 +63,7 @@ const Features = () => {
         className="absolute inset-0 z-0 w-full h-full bg-cover bg-center"
       />
       <div className="absolute inset-0 bg-black/50 z-0" />
-      
+
       <div className="relative z-10 max-w-7xl mx-auto text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

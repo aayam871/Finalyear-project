@@ -1,40 +1,97 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Otp from "./Otp.jsx";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const customerSchema = z.object({
   firstName: z.string().min(1, "Naam lekhna xutais bhai"),
   lastName: z.string().min(1, "Thar lekhna ta nabirsi yar"),
   address: z.string().min(1, "Kaa basxas ta thahuna paryo ni"),
-  username: z.string().min(5, "Username must be at least 5 characters"),
+  email: z.string().email("Valid email halna parcha ni"),
+  phone: z
+    .string()
+    .min(10, "Phone number must be at least 10 digits")
+    .max(10, "Phone number must be 10 digits")
+    .regex(/^\d{10}$/, "Phone number must be 10 digits"),
+  userName: z.string().min(5, "Username must be at least 5 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 const deliverySchema = customerSchema.extend({
-  citizenship: z
+  citizenshipPhoto: z
     .any()
     .refine((file) => file?.length === 1, "Citizenship photo is required"),
-  license: z
+  drivingLicense: z
     .any()
     .refine((file) => file?.length === 1, "Driving license photo is required"),
 });
 
 const Signup = () => {
   const [role, setRole] = useState("customer");
-
   const schema = role === "customer" ? customerSchema : deliverySchema;
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = (data) => {
-    console.log("Form Submitted:", data);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    reset();
+  }, [role, reset]);
+
+  const onSubmit = async (data) => {
+    try {
+      if (role === "customer") {
+        const response = await axios.post(
+          "https://365d-2400-1a00-bb20-29c-d048-1711-eb96-db6e.ngrok-free.app/api/v1/auth/signup/customer",
+          data,
+          { headers: { "Content-Type": "application/json" } }
+        );
+
+        if (response.status === 200) {
+          alert("Signup successful! Now verify OTP.");
+          navigate("/otp", { state: { role, email: data.email } });
+        } else {
+          alert(response.data.errorMessage || "Signup failed.");
+        }
+      } else {
+        const formData = new FormData();
+        formData.append("firstName", data.firstName);
+        formData.append("lastName", data.lastName);
+        formData.append("address", data.address);
+        formData.append("email", data.email);
+        formData.append("phone", data.phone);
+        formData.append("userName", data.userName);
+        formData.append("password", data.password);
+        formData.append("citizenshipPhoto", data.citizenshipPhoto[0]);
+        formData.append("drivingLicense", data.drivingLicense[0]);
+
+        const response = await axios.post(
+          "https://365d-2400-1a00-bb20-29c-d048-1711-eb96-db6e.ngrok-free.app/api/v1/auth/signup/delivery",
+          formData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+
+        if (response.status === 200) {
+          alert("Signup successful! Now verify OTP.");
+          navigate("/otp", { state: { role, email: data.email } });
+        } else {
+          alert(response.data.errorMessage || "Signup failed.");
+        }
+      }
+    } catch (error) {
+      console.error("Signup error:", error);
+      alert("Something went wrong.");
+    }
   };
 
   const activeTab = "bg-[#d46a27] text-white";
@@ -50,7 +107,7 @@ const Signup = () => {
         backgroundBlendMode: "overlay",
       }}
     >
-      <div className="w-full max-w-md bg-[#f0e6d2] p-6 rounded-xl shadow-2xl backdrop-blur-md border border-gray-200">
+      <div className="w-full max-w-md bg-[#f0e6d2] p-4 rounded-xl shadow-2xl backdrop-blur-md border border-gray-200">
         <div className="flex justify-center mb-4">
           <button
             onClick={() => setRole("customer")}
@@ -70,7 +127,11 @@ const Signup = () => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-3"
+          encType="multipart/form-data"
+        >
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="block font-medium text-black text-sm">
@@ -123,16 +184,45 @@ const Signup = () => {
 
           <div>
             <label className="block font-medium text-black text-sm">
+              Email
+            </label>
+            <input
+              type="email"
+              {...register("email")}
+              placeholder="Enter your email"
+              className="w-full p-2 border border-gray-300 rounded-md focus:border-[#d46a27] focus:outline-none placeholder-gray-500 text-sm"
+            />
+            {errors.email && (
+              <p className="text-xs text-red-500">{errors.email.message}</p>
+            )}
+          </div>
+          <div>
+            <label className="block font-medium text-black text-sm">
+              Phone Number
+            </label>
+            <input
+              type="text"
+              {...register("phone")}
+              placeholder="Enter your Phone Number"
+              className="w-full p-2 border border-gray-300 rounded-md focus:border-[#d46a27] focus:outline-none placeholder-gray-500 text-sm"
+            />
+            {errors.phone && (
+              <p className="text-xs text-red-500">{errors.phone.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block font-medium text-black text-sm">
               Username
             </label>
             <input
               type="text"
-              {...register("username")}
+              {...register("userName")}
               placeholder="Enter your username"
               className="w-full p-2 border border-gray-300 rounded-md focus:border-[#d46a27] focus:outline-none placeholder-gray-500 text-sm"
             />
-            {errors.username && (
-              <p className="text-xs text-red-500">{errors.username.message}</p>
+            {errors.userName && (
+              <p className="text-xs text-red-500">{errors.userName.message}</p>
             )}
           </div>
 
@@ -159,13 +249,13 @@ const Signup = () => {
                 </label>
                 <input
                   type="file"
-                  {...register("citizenship")}
+                  {...register("citizenshipPhoto")}
                   accept="image/*"
                   className="w-full p-2 border border-gray-300 rounded-md bg-white"
                 />
-                {errors.citizenship && (
+                {errors.citizenshipPhoto && (
                   <p className="text-xs text-red-500">
-                    {errors.citizenship.message}
+                    {errors.citizenshipPhoto.message}
                   </p>
                 )}
               </div>
@@ -175,13 +265,13 @@ const Signup = () => {
                 </label>
                 <input
                   type="file"
-                  {...register("license")}
+                  {...register("drivingLicense")}
                   accept="image/*"
                   className="w-full p-2 border border-gray-300 rounded-md bg-white"
                 />
-                {errors.license && (
+                {errors.drivingLicense && (
                   <p className="text-xs text-red-500">
-                    {errors.license.message}
+                    {errors.drivingLicense.message}
                   </p>
                 )}
               </div>

@@ -1,19 +1,29 @@
-import React from "react";
-import Navbar from "./Navbar";
+import React, { useState } from "react";
 import Hero from "./Hero";
 import Features from "./Features";
 import Banner from "./Banner";
 import Download from "./Download";
-import Footer from "./Footer";
+import SplashScreen from "./SplashScreen";
+
 const Home = () => {
+  const [showSplash, setShowSplash] = useState(true);
+
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+  };
+
   return (
     <>
-      <Navbar />
-      <Hero />
-      <Features />
-      <Banner />
-      <Download />
-      <Footer />
+      {showSplash ? (
+        <SplashScreen onComplete={handleSplashComplete} />
+      ) : (
+        <>
+          <Hero />
+          <Features />
+          <Banner />
+          <Download />
+        </>
+      )}
     </>
   );
 };

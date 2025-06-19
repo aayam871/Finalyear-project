@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FaFacebookF,
   FaInstagram,
@@ -13,6 +13,12 @@ import playStore from "./images/Playstore.png";
 import Logo from "./images/QuickBites_Logo_Transparent1.png";
 
 const Footer = () => {
+  const navigate = useNavigate();
+
+  const handleStoreClick = () => {
+    navigate("/hudaixa");
+  };
+
   return (
     <footer className="bg-gray-900 text-white px-6 py-10">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-8">
@@ -40,7 +46,7 @@ const Footer = () => {
             </li>
             <li>
               <Link to="/menu" className="hover:text-orange-400">
-                View Menu
+                Menu
               </Link>
             </li>
             <li>
@@ -96,32 +102,24 @@ const Footer = () => {
             Download Our App
           </h3>
           <div className="flex flex-col bg-gray-900 sm:flex-column gap-6">
-            <a
-              href="https://play.google.com/store"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <button onClick={handleStoreClick} className="text-left">
               <img
                 src={playStore}
                 alt="Get it on Google Play"
                 className="h-12 hover:opacity-80 transition rounded-md"
               />
-            </a>
-            <a
-              href="https://www.apple.com/app-store/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            </button>
+            <button onClick={handleStoreClick} className="text-left">
               <img
                 src={appStore}
                 alt="Download on the App Store"
                 className="h-12 hover:opacity-80 transition rounded-md shadow-md"
               />
-            </a>
+            </button>
           </div>
         </div>
 
-        {/*  Contact Info & Socials */}
+        {/* Contact Info & Socials */}
         <div className="md:ml-8">
           <h3 className="text-lg font-semibold text-orange-400 mb-3">
             Contact Info
@@ -131,7 +129,7 @@ const Footer = () => {
               <FaPhoneAlt className="text-orange-400" /> +977-9845207641
             </li>
             <li className="flex items-center gap-2">
-              <FaEnvelope className="text-orange-400" />{" "}
+              <FaEnvelope className="text-orange-400" />
               madhyaraat@quickbites.com
             </li>
             <li className="flex items-center gap-2">

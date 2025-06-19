@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import logo from "./images/QuickBites_Logo_Transparent1.png";
 
@@ -7,13 +7,35 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
+  useEffect(() => {
+    if (location.state?.showMessage) {
+      alert("✅ Now login with your email and password");
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (user && user.roles) {
+      console.log("User already logged in:", user);
+
+      if (user.roles.includes("ROLE_ADMIN")) {
+        navigate("/admin");
+      } else if (user.roles.includes("ROLE_AGENT")) {
+        navigate("/delivery-home");
+      } else if (user.roles.includes("ROLE_CUSTOMER")) {
+        navigate("/customer-home");
+      }
+    }
+  }, [navigate]);
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
       const response = await axios.post(
-        "https://04e0-103-167-232-28.ngrok-free.app/public/login",
+        "https://365d-2400-1a00-bb20-29c-d048-1711-eb96-db6e.ngrok-free.app/api/v1/auth/login",
         { username, password },
         {
           headers: {
@@ -26,14 +48,36 @@ const Login = () => {
       console.log("Login response:", result);
 
       if (result.status === "success") {
-        const { token, expiry } = result.data;
+        const { token, expiresAt, roles } = result.data;
+        const userData = { token, expiresAt, roles, username };
 
-        localStorage.setItem("authToken", token);
-        localStorage.setItem("tokenExpiry", expiry);
+        localStorage.setItem("user", JSON.stringify(userData));
+        console.log(
+          "Saved user in localStorage:",
+          JSON.parse(localStorage.getItem("user"))
+        );
 
-        console.log("Login successful! Token:", token);
         alert("Login successful!");
-        navigate("/home");
+
+        // ✅ Navigate to correct page based on role
+        if (roles && Array.isArray(roles)) {
+          if (roles.includes("ROLE_ADMIN")) {
+            console.log("Redirecting to /admin");
+            navigate("/admin");
+          } else if (roles.includes("ROLE_AGENT")) {
+            console.log("Redirecting to /delivery-home");
+            navigate("/delivery-home");
+          } else if (roles.includes("ROLE_CUSTOMER")) {
+            console.log("Redirecting to /customer-home");
+            navigate("/customer-home");
+          } else {
+            console.log("Redirecting to /login");
+            navigate("/login");
+          }
+        } else {
+          console.warn("Roles is not an array or is undefined:", roles);
+          navigate("/login");
+        }
       } else {
         console.warn(
           "Login failed! Reason:",

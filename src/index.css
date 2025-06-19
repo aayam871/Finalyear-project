@@ -14,6 +14,12 @@ code {
 html {
   scroll-behavior: smooth;
 }
+.backface-hidden {
+  backface-visibility: hidden;
+}
+.preserve-3d {
+  transform-style: preserve-3d;
+}
 
 @tailwind base;
 @tailwind components;
