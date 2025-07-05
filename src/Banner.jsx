@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import Backg from "./images/BannerBg.jpg";
-import SideImage from "./images/BannerRight.png"; // Import your right side image
+import SideImage from "./images/BannerRight.png"; 
 import Menu from "./Menu.jsx";
 import { Link } from "react-router-dom";
 const Banner = () => {
@@ -22,7 +22,7 @@ const Banner = () => {
       <div className="absolute inset-0 bg-black/50 z-0"></div>
 
       <div className="relative z-10 container mx-auto px-6 md:px-12 flex items-center justify-between h-full">
-        {/* Left Text Content */}
+      
         <motion.div
           initial={{ x: -100, opacity: 0 }}
           whileInView={{ x: 0, opacity: 1 }}
@@ -49,7 +49,7 @@ const Banner = () => {
           </Link>
         </motion.div>
 
-        {/* Right: Image */}
+      
         <motion.div
           initial={{ x: 100, opacity: 0 }}
           whileInView={{ x: 0, opacity: 1 }}

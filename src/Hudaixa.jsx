@@ -5,7 +5,7 @@ import devImg from "./images/dev-working.png";
 const Hudaixa = () => {
   return (
     <section className="min-h-screen bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 flex flex-col items-center justify-center px-6 py-12">
-      {/* Title at the top */}
+      
       <motion.h1
         initial={{ opacity: 0, y: -40 }}
         animate={{ opacity: 1, y: 0 }}

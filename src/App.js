@@ -5,6 +5,7 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
+
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import Home from "./Home";
@@ -14,32 +15,35 @@ import Signup from "./Signup";
 import Otp from "./Otp";
 import CustomerHome from "./CustomerHome";
 import DeliveryHome from "./DeliveryHome";
-import Admin from "./Admin";
 import Features from "./Features";
 import ScrollToTop from "./ScrollToTop";
 import ProtectedRoute from "./ProtectedRoute";
-import AdminDashboard from "./AdminDashboard";
-import Aorders from "./Aorders";
-import Aprofile from "./Aprofile";
 import Hudaixa from "./Hudaixa";
+import ContactUs from "./ContactUs";
+import Faqs from "./Faqs";
+import Cart from "./Cart";
+import Cprofile from "./Cprofile";
+import Support from "./Support";
+import Refund from "./Refund";
+import Terms from "./Terms";
+import Privacy from "./Privacy";
+
+import AdminDashboardRoutes from "./admin/AdminDashboardRoutes";
+import Aprofile from "./Aprofile";
 
 function AppWrapper() {
   const location = useLocation();
-
-  // Yo routes ma navbar-footer hataune
-  const noNavFooterRoutes = ["/hudaixa"];
-
-  const hideNavFooter = noNavFooterRoutes.includes(location.pathname);
+  const noNavFooterRoutes = ["/hudaixa", "/login", "/signup", "/otp"];
+  const hideNavFooter = noNavFooterRoutes.some((route) =>
+    location.pathname.startsWith(route)
+  );
 
   return (
     <>
       <ScrollToTop />
-
-      {/* Conditionally render Navbar */}
       {!hideNavFooter && <Navbar />}
 
       <Routes>
-        {/* 🏡 Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/menu" element={<Menu />} />
         <Route path="/login" element={<Login />} />
@@ -47,35 +51,58 @@ function AppWrapper() {
         <Route path="/otp" element={<Otp />} />
         <Route path="/hudaixa" element={<Hudaixa />} />
         <Route path="/features" element={<Features />} />
-        <Route path="/adashboard" element={<AdminDashboard />} />
-        <Route path="/aorders" element={<Aorders />} />
-        <Route path="/aprofile" element={<Aprofile />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/contact" element={<ContactUs />} />
+        <Route path="/faqs" element={<Faqs />} />
+        <Route path="/support" element={<Support />} />
+        <Route path="/refund-policy" element={<Refund />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
 
-        {/* 🔐 Protected Routes */}
-        {[
-          { path: "/admin", element: <Admin />, role: "ROLE_ADMIN" },
-          {
-            path: "/customer-home",
-            element: <CustomerHome />,
-            role: "ROLE_CUSTOMER",
-          },
-          {
-            path: "/delivery-home",
-            element: <DeliveryHome />,
-            role: "ROLE_DELIVERYAGENT",
-          },
-        ].map(({ path, element, role }) => (
-          <Route
-            key={path}
-            path={path}
-            element={
-              <ProtectedRoute requiredRole={role}>{element}</ProtectedRoute>
-            }
-          />
-        ))}
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute requiredRole="ROLE_ADMIN">
+              <AdminDashboardRoutes />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/aprofile"
+          element={
+            <ProtectedRoute requiredRole="ROLE_ADMIN">
+              <Aprofile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/customer-home"
+          element={
+            <ProtectedRoute requiredRole="ROLE_CUSTOMER">
+              <CustomerHome />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cprofile"
+          element={
+            <ProtectedRoute requiredRole="ROLE_CUSTOMER">
+              <Cprofile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/delivery-home"
+          element={
+            <ProtectedRoute requiredRole="ROLE_DELIVERYAGENT">
+              <DeliveryHome />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
 
-      {/* Conditionally render Footer */}
       {!hideNavFooter && <Footer />}
     </>
   );

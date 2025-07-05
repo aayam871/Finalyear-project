@@ -36,7 +36,7 @@ const Otp = () => {
     if (fullOtp.length === 6) {
       try {
         const response = await fetch(
-          "https://365d-2400-1a00-bb20-29c-d048-1711-eb96-db6e.ngrok-free.app/api/v1/auth/verify-otp",
+          "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/auth/verify-otp",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -47,10 +47,10 @@ const Otp = () => {
         if (response.status === 202) {
           const messageText = await response.text();
 
-          if (messageText === "OTP_Verified") {
+          if (messageText === "OTP_VERIFIED") {
             setMessage("✅ OTP Verified. La badhai xa!");
 
-            // Redirect to login with message
+            
             navigate("/login", {
               state: { showMessage: true },
             });
@@ -72,7 +72,7 @@ const Otp = () => {
   const handleResend = async () => {
     try {
       const response = await fetch(
-        "https://365d-2400-1a00-bb20-29c-d048-1711-eb96-db6e.ngrok-free.app/api/v1/auth/resend-otp",
+        "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/auth/resend-otp",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

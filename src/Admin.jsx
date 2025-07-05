@@ -3,6 +3,7 @@ import Hero from "./Hero";
 import Features from "./Features";
 import Banner from "./Banner";
 import Download from "./Download";
+import Review from "./Review";
 
 const Admin = () => {
   return (
@@ -10,6 +11,7 @@ const Admin = () => {
       <Hero />
       <Features />
       <Banner />
+      <Review />
       <Download />
     </>
   );

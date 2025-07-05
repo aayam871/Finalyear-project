@@ -19,7 +19,7 @@ const SplashScreen = ({ onComplete }) => {
             alt="QuickBites Logo"
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 2.5, opacity: 1 }}
-            transition={{ duration: 2, ease: "easeInOut" }}
+            transition={{ duration: 1.5, ease: "easeInOut" }}
             className="w-32 h-32 object-contain"
             onAnimationComplete={() => {
               setAnimationDone(true);

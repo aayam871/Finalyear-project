@@ -17,10 +17,7 @@ const Login = () => {
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
-
     if (user && user.roles) {
-      console.log("User already logged in:", user);
-
       if (user.roles.includes("ROLE_ADMIN")) {
         navigate("/admin");
       } else if (user.roles.includes("ROLE_AGENT")) {
@@ -30,17 +27,19 @@ const Login = () => {
       }
     }
   }, [navigate]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
       const response = await axios.post(
-        "https://365d-2400-1a00-bb20-29c-d048-1711-eb96-db6e.ngrok-free.app/api/v1/auth/login",
+        "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/auth/login",
         { username, password },
         {
           headers: {
             "Content-Type": "application/json",
           },
+          withCredentials: true,
         }
       );
 
@@ -48,41 +47,44 @@ const Login = () => {
       console.log("Login response:", result);
 
       if (result.status === "success") {
-        const { token, expiresAt, roles } = result.data;
-        const userData = { token, expiresAt, roles, username };
+        const {
+          accessToken,
+          accessTokenExpiry,
+          refreshTokenExpiry,
+          roles,
+          username: resUsername,
+          id,
+        } = result.data;
+
+        //  Store accessToken and related data (not refresh token!)
+        const userData = {
+          accessToken,
+          accessTokenExpiry,
+          refreshTokenExpiry,
+          roles,
+          username: resUsername,
+          id,
+        };
 
         localStorage.setItem("user", JSON.stringify(userData));
-        console.log(
-          "Saved user in localStorage:",
-          JSON.parse(localStorage.getItem("user"))
-        );
-
         alert("Login successful!");
 
-        // ✅ Navigate to correct page based on role
+        //  Navigate based on roles
         if (roles && Array.isArray(roles)) {
           if (roles.includes("ROLE_ADMIN")) {
-            console.log("Redirecting to /admin");
-            navigate("/admin");
+            navigate("/admin/add-food");
           } else if (roles.includes("ROLE_AGENT")) {
-            console.log("Redirecting to /delivery-home");
             navigate("/delivery-home");
           } else if (roles.includes("ROLE_CUSTOMER")) {
-            console.log("Redirecting to /customer-home");
             navigate("/customer-home");
           } else {
-            console.log("Redirecting to /login");
             navigate("/login");
           }
         } else {
-          console.warn("Roles is not an array or is undefined:", roles);
+          console.warn("Roles is not an array or undefined:", roles);
           navigate("/login");
         }
       } else {
-        console.warn(
-          "Login failed! Reason:",
-          result.errorMessage || "Unknown error"
-        );
         alert(result.errorMessage || "Login failed.");
       }
     } catch (err) {
@@ -144,7 +146,7 @@ const Login = () => {
               <label className="flex items-center text-black">
                 <input
                   type="checkbox"
-                  className="mr-2 text-[#d46a27] checked:bg-[#c25e1f] "
+                  className="mr-2 text-[#d46a27] checked:bg-[#c25e1f]"
                 />
                 Remember me
               </label>

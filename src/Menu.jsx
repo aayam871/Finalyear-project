@@ -1,131 +1,139 @@
-import React from "react";
-import Navbar from "./Navbar";
+import { useEffect, useState, useMemo } from "react";
+import axios from "axios";
+import { useCartStore } from "./cartStore"; 
 import SearchBar from "./SearchBar";
-import { useMenuStore } from "./menuStore";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import CategorySection from "./CategorySection";
 
-const categories = ["All", "Pizza", "Burger", "Chinese", "Soup", "Drinks"];
+const BASE_URL = "https://8e9f-103-167-232-13.ngrok-free.app";
 
 const Menu = () => {
-  const items = useMenuStore((state) => state.items);
-  const selectedCategory = useMenuStore((state) => state.selectedCategory);
-  const setCategory = useMenuStore((state) => state.setCategory);
-  const searchTerm = useMenuStore((state) => state.searchTerm);
-  const isLoggedIn = useMenuStore((state) => state.isLoggedIn);
-  const setIsLoggedIn = useMenuStore((state) => state.setIsLoggedIn);
+  const [categories, setCategories] = useState([]);
+  const [foods, setFoods] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeCategoryId, setActiveCategoryId] = useState("all");
 
-  const filteredItems = React.useMemo(() => {
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    return items.filter((item) => {
+  const { addToCart } = useCartStore(); // ⬅addToCart function
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [categoryRes, foodRes] = await Promise.all([
+          axios.get(`${BASE_URL}/public/foodCategories`, {
+            headers: { "ngrok-skip-browser-warning": "true" },
+          }),
+          axios.get(`${BASE_URL}/public/foodItems`, {
+            headers: { "ngrok-skip-browser-warning": "true" },
+          }),
+        ]);
+
+        setCategories(Array.isArray(categoryRes.data) ? categoryRes.data : []);
+        setFoods(Array.isArray(foodRes.data) ? foodRes.data : []);
+      } catch (error) {
+        console.error("Failed to fetch menu data:", error.message);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const filteredFoods = useMemo(() => {
+    return foods.filter((food) => {
+      const matchesSearch = food.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
       const matchesCategory =
-        selectedCategory === "All" || item.category === selectedCategory;
-      const matchesSearch = item.name.toLowerCase().startsWith(lowerSearchTerm);
-      return matchesCategory && matchesSearch;
+        activeCategoryId === "all" || food.category?.id === activeCategoryId;
+      return matchesSearch && matchesCategory;
     });
-  }, [items, selectedCategory, searchTerm]);
+  }, [searchTerm, foods, activeCategoryId]);
 
-  const handleOrderClick = (itemName) => {
-    if (!isLoggedIn) {
-      alert("Please login to order.");
+  const handleCategoryClick = (id) => setActiveCategoryId(id);
+
+  const handleAddToCart = (food) => {
+    const userString = localStorage.getItem("user");
+    if (!userString) {
+      alert("Please login as Customer or Admin to order.");
       return;
     }
-    alert(`Ordering ${itemName}`);
+
+    try {
+      const user = JSON.parse(userString);
+      const roles = user.roles || [];
+      const canOrder =
+        roles.includes("ROLE_ADMIN") || roles.includes("ROLE_CUSTOMER");
+
+      if (!canOrder) {
+        alert("Please login as Customer or Admin to order.");
+        return;
+      }
+
+      addToCart(food);
+    } catch (err) {
+      console.error("Error reading user from localStorage", err);
+      alert("Please login as Customer or Admin to order.");
+    }
   };
 
   return (
-    <>
-      <div className="bg-gradient-to-br from-gray-500 via-orange-300 min-h-screen py-8 text-white">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Title */}
-          <div className="text-center mb-10 md:mb-12">
-            <h1 className="text-4xl sm:text-5xl font-extrabold font-serif mb-3 text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-black to-orange-600">
-              Our Delicious Menu
-            </h1>
-            <p className="text-lg font-serif text-gray-900 max-w-xl mx-auto">
-              Explore a variety of flavors crafted with the freshest
-              ingredients.
-            </p>
-          </div>
+    <div className="bg-orange-50 min-h-screen py-14 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <header className="text-center mb-12">
+          <h1 className="text-5xl sm:text-6xl font-extrabold font-serif text-orange-800 drop-shadow-lg">
+            Explore Our Delicious Menu
+          </h1>
+          <p className="text-lg text-gray-800 mt-4 max-w-2xl mx-auto">
+            Browse our variety of mouth-watering dishes. Use the search bar or
+            category buttons to discover your favorites!
+          </p>
+        </header>
 
-          {/* Category Filter */}
-          <div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 mb-10">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                className={`px-5 py-2.5 rounded-full font-semibold transition-all duration-300 ease-in-out transform focus:outline-none
-                  ${
-                    selectedCategory === cat
-                      ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg ring-2 ring-offset-2 ring-orange-400 scale-105"
-                      : "bg-white text-gray-700 border border-gray-300 hover:bg-orange-100 hover:border-orange-400 hover:text-orange-700 hover:shadow-md active:scale-95"
-                  }`}
-                onClick={() => setCategory(cat)}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+        <SearchBar
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
 
-          {/* Search Bar */}
-          <div className="mb-10 max-w-lg mx-auto">
-            <SearchBar />
-          </div>
-
-          {/* Food Items */}
-          {filteredItems.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
-              {filteredItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col group transform transition-all duration-300 hover:shadow-2xl hover:-translate-y-1.5"
-                >
-                  <div className="relative">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-56 object-contain group-hover:scale-105 transition-transform duration-500 ease-in-out"
-                    />
-                  </div>
-
-                  <div className="p-5 flex flex-col flex-grow">
-                    <h3 className="text-xl font-bold text-gray-800 mb-1 group-hover:text-orange-600 transition-colors duration-300">
-                      {item.name}
-                    </h3>
-                    <p className="text-lg font-semibold text-red-600 mb-3">
-                      Rs. {item.price}
-                    </p>
-                    {item.description && (
-                      <p className="text-gray-500 text-sm mb-4 flex-grow min-h-[40px]">
-                        {item.description.substring(0, 70)}
-                        {item.description.length > 70 && "..."}
-                      </p>
-                    )}
-                    <button
-                      onClick={() => handleOrderClick(item.name)}
-                      className="mt-auto w-full px-6 py-2.5 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-colors duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-opacity-75"
-                    >
-                      Order Now
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center col-span-full py-16">
-              <MagnifyingGlassIcon className="mx-auto h-16 w-16 text-orange-300" />
-              <h3 className="mt-4 text-2xl font-semibold text-gray-700">
-                No Items Found
-              </h3>
-              <p className="mt-2 text-md text-gray-500">
-                Sorry, we couldn't find any items matching your selection.
-                <br />
-                Try a different category or search term.
-              </p>
-            </div>
-          )}
+        <div className="flex flex-wrap justify-center gap-3 mt-10 mb-12">
+          <CategoryButton
+            label="All"
+            isActive={activeCategoryId === "all"}
+            onClick={() => handleCategoryClick("all")}
+          />
+          {categories.map((cat) => (
+            <CategoryButton
+              key={cat.id}
+              label={cat.name}
+              isActive={activeCategoryId === cat.id}
+              onClick={() => handleCategoryClick(cat.id)}
+            />
+          ))}
         </div>
+
+        <CategorySection
+          category={
+            activeCategoryId === "all"
+              ? { name: "All Categories", id: "all", imageUrl: "" }
+              : categories.find((cat) => cat.id === activeCategoryId)
+          }
+          items={filteredFoods}
+          onAddToCart={handleAddToCart} 
+        />
       </div>
-    </>
+    </div>
   );
 };
+
+const CategoryButton = ({ label, isActive, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`px-5 py-2 rounded-full border transition-all duration-200 ease-in-out 
+      ${
+        isActive
+          ? "bg-orange-600 text-white border-orange-600 shadow-md"
+          : "bg-white text-orange-600 border-orange-600 hover:bg-orange-100 hover:shadow-sm"
+      }`}
+  >
+    {label}
+  </button>
+);
 
 export default Menu;

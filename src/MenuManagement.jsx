@@ -1,8 +1,23 @@
-import React from "react";
-import { useMenuStore } from "./menuStore";
+import React, { useEffect, useState } from "react";
+
+const BASE_URL = "https://8e9f-103-167-232-13.ngrok-free.app";
 
 const MenuManagement = () => {
-  const items = useMenuStore((state) => state.items);
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/public/foodItems`);
+        const data = await res.json();
+        setItems(data);
+      } catch (error) {
+        console.error("Failed to fetch food items:", error);
+      }
+    };
+
+    fetchMenuItems();
+  }, []);
 
   return (
     <div className="bg-white shadow-lg rounded-xl p-6 mb-6">
@@ -21,7 +36,7 @@ const MenuManagement = () => {
           {items.map((item) => (
             <tr key={item.id} className="border-t">
               <td className="px-4 py-2">{item.name}</td>
-              <td className="px-4 py-2">{item.category}</td>
+              <td className="px-4 py-2">{item.category?.name || "N/A"}</td>
               <td className="px-4 py-2">{item.price}</td>
             </tr>
           ))}
@@ -32,3 +47,4 @@ const MenuManagement = () => {
 };
 
 export default MenuManagement;
+      

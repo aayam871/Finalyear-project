@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { FiShoppingCart } from "react-icons/fi";
+import { useCartStore } from "./cartStore";
 import logo from "./images/QuickBites_Logo_Transparent.png";
 import icon from "./images/icon.jpeg";
 
@@ -7,8 +9,10 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const { cart } = useCartStore();
 
-  // Reload user from localStorage when route changes
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
   useEffect(() => {
     try {
       const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -19,16 +23,37 @@ const Navbar = () => {
     }
   }, [location]);
 
-  const isLoggedIn = !!user;
   const roles = user?.roles || [];
-  const isAdmin = roles.includes("ROLE_ADMIN");
-  const isCustomer = roles.includes("ROLE_CUSTOMER");
-  const isAgent = roles.includes("ROLE_AGENT");
+
+  const isAdmin =
+    roles.includes("ROLE_ADMIN") && roles.includes("ROLE_CUSTOMER");
+  const isCustomer = roles.length === 1 && roles.includes("ROLE_CUSTOMER");
+  const isAgent = roles.length === 1 && roles.includes("ROLE_AGENT");
+
+  let primaryRole = "GUEST";
+  if (isAdmin) primaryRole = "ADMIN";
+  else if (isCustomer) primaryRole = "CUSTOMER";
+  else if (isAgent) primaryRole = "AGENT";
+
+  const isLoggedIn = !!user;
 
   const getHomeRoute = () => {
-    if (isAdmin) return "/admin";
-    if (isCustomer) return "/customer-home";
-    if (isAgent) return "/delivery-home";
+    if (primaryRole === "ADMIN") return "/admin";
+    if (primaryRole === "CUSTOMER") return "/customer-home";
+    if (primaryRole === "AGENT") return "/delivery-home";
+    return "/";
+  };
+
+  const getProfileLink = () => {
+    if (primaryRole === "ADMIN") return "/aprofile";
+    if (primaryRole === "CUSTOMER") return "/cprofile";
+    if (primaryRole === "AGENT") return "/dprofile";
+    return "/login";
+  };
+
+  const getOrdersLink = () => {
+    if (primaryRole === "CUSTOMER") return "/corder";
+    if (primaryRole === "AGENT") return "/dorder";
     return "/";
   };
 
@@ -53,7 +78,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-orange-400 text-gray-900 shadow-md px-4 py-0 sticky top-0 z-50">
+    <nav className="bg-orange-400 text-black shadow-md px-4 py-0 sticky top-0 z-50">
       <div className="flex items-center justify-between h-20">
         {/* Logo */}
         <div className="flex items-center space-x-4">
@@ -69,7 +94,7 @@ const Navbar = () => {
           </NavLink>
         </div>
 
-        {/* Navigation Links */}
+        
         <ul className="hidden md:flex space-x-12 font-semibold text-lg">
           {navItems.map(({ to, label }) => (
             <li key={to} className="relative">
@@ -95,8 +120,28 @@ const Navbar = () => {
           ))}
         </ul>
 
-        {/* Login / Profile */}
-        <div className="ml-2 relative">
+        <div className="ml-2 relative flex items-center space-x-4">
+          {isLoggedIn && user?.username && (
+            <span className="text-white font-semibold mr-2 hidden md:inline-block">
+              Welcome, {user.username}!
+            </span>
+          )}
+
+          {isLoggedIn &&
+            (primaryRole === "CUSTOMER" || primaryRole === "ADMIN") && (
+              <div
+                className="relative cursor-pointer text-white"
+                onClick={() => navigate("/cart")}
+              >
+                <FiShoppingCart size={24} />
+                {totalItems > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                    {totalItems}
+                  </span>
+                )}
+              </div>
+            )}
+
           {isLoggedIn ? (
             <div className="group relative">
               <img
@@ -105,24 +150,26 @@ const Navbar = () => {
                 className="h-10 w-10 rounded-full cursor-pointer border-2 border-white"
               />
               <div className="absolute right-0 mt-2 bg-white text-black rounded-md shadow-md p-3 w-48 hidden group-hover:block z-50">
-                {isAdmin && (
+                {primaryRole === "ADMIN" && (
                   <NavLink
-                    to="/adashboard"
+                    to="/admin/add-food"
                     className="block py-2 px-3 hover:bg-orange-100 rounded-md"
                   >
                     Dashboard
                   </NavLink>
                 )}
-                {(isCustomer || isAgent) && (
+
+                {(primaryRole === "CUSTOMER" || primaryRole === "AGENT") && (
                   <NavLink
-                    to="/aorders"
+                    to={getOrdersLink()}
                     className="block py-2 px-3 hover:bg-orange-100 rounded-md"
                   >
                     Orders
                   </NavLink>
                 )}
+
                 <NavLink
-                  to="/aprofile"
+                  to={getProfileLink()}
                   className="block py-2 px-3 hover:bg-orange-100 rounded-md"
                 >
                   My Profile

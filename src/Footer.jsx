@@ -22,7 +22,7 @@ const Footer = () => {
   return (
     <footer className="bg-gray-900 text-white px-6 py-10">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-8">
-        {/* Branding */}
+      
         <div>
           <div className="mb-2">
             <img src={Logo} alt="QuickBites Logo" className="h-20 w-auto" />
@@ -33,7 +33,6 @@ const Footer = () => {
           </p>
         </div>
 
-        {/* Quick Links */}
         <div>
           <h3 className="text-lg font-semibold text-orange-400 mb-3">
             Quick Links
@@ -67,7 +66,7 @@ const Footer = () => {
           </ul>
         </div>
 
-        {/* Help & Support */}
+        
         <div>
           <h3 className="text-lg font-semibold text-orange-400 mb-3">
             Help & Support
@@ -96,7 +95,7 @@ const Footer = () => {
           </ul>
         </div>
 
-        {/* Download App */}
+      
         <div>
           <h3 className="text-lg font-semibold text-orange-400 mb-4">
             Download Our App
@@ -119,7 +118,7 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Contact Info & Socials */}
+      
         <div className="md:ml-8">
           <h3 className="text-lg font-semibold text-orange-400 mb-3">
             Contact Info
@@ -163,7 +162,7 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* Copyright */}
+      
       <div className="mt-10 text-center text-sm text-gray-400 border-t border-gray-700 pt-4">
         © 2025 <span className="text-orange-500 font-semibold">QuickBites</span>
         . All rights reserved.

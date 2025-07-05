@@ -52,7 +52,7 @@ const Signup = () => {
     try {
       if (role === "customer") {
         const response = await axios.post(
-          "https://365d-2400-1a00-bb20-29c-d048-1711-eb96-db6e.ngrok-free.app/api/v1/auth/signup/customer",
+          "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/auth/signup/customer",
           data,
           { headers: { "Content-Type": "application/json" } }
         );
@@ -76,7 +76,7 @@ const Signup = () => {
         formData.append("drivingLicense", data.drivingLicense[0]);
 
         const response = await axios.post(
-          "https://365d-2400-1a00-bb20-29c-d048-1711-eb96-db6e.ngrok-free.app/api/v1/auth/signup/delivery",
+          "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/auth/signup/delivery",
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );

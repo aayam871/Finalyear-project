@@ -4,6 +4,7 @@ import Features from "./Features";
 import Banner from "./Banner";
 import Download from "./Download";
 import SplashScreen from "./SplashScreen";
+import Review from "./Review";
 
 const Home = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -21,6 +22,7 @@ const Home = () => {
           <Hero />
           <Features />
           <Banner />
+          <Review />
           <Download />
         </>
       )}
