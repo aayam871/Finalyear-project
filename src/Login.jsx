@@ -2,16 +2,21 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import logo from "./images/QuickBites_Logo_Transparent1.png";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     if (location.state?.showMessage) {
-      alert("✅ Now login with your email and password");
+      toast.success(
+        "You are registered! Now login with your username and password."
+      );
     }
   }, [location.state]);
 
@@ -30,6 +35,13 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (loading) return; // prevent duplicate
+    if (!username.trim() || !password.trim()) {
+      toast.error("Please login with your credentials!");
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const response = await axios.post(
@@ -44,7 +56,6 @@ const Login = () => {
       );
 
       const result = response.data;
-      console.log("Login response:", result);
 
       if (result.status === "success") {
         const {
@@ -56,7 +67,6 @@ const Login = () => {
           id,
         } = result.data;
 
-        //  Store accessToken and related data (not refresh token!)
         const userData = {
           accessToken,
           accessTokenExpiry,
@@ -67,10 +77,10 @@ const Login = () => {
         };
 
         localStorage.setItem("user", JSON.stringify(userData));
-        alert("Login successful!");
 
-        //  Navigate based on roles
-        if (roles && Array.isArray(roles)) {
+        toast.success(`Welcome back, ${resUsername}!`);
+
+        setTimeout(() => {
           if (roles.includes("ROLE_ADMIN")) {
             navigate("/admin/add-food");
           } else if (roles.includes("ROLE_AGENT")) {
@@ -80,17 +90,15 @@ const Login = () => {
           } else {
             navigate("/login");
           }
-        } else {
-          console.warn("Roles is not an array or undefined:", roles);
-          navigate("/login");
-        }
+        }, 300);
       } else {
-        alert(result.errorMessage || "Login failed.");
+        toast.error(result.errorMessage || "Login failed.");
       }
     } catch (err) {
       console.error("Login error occurred:", err.message || err);
-      alert("An error occurred. Please try again.");
-      navigate("/login");
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,7 +112,7 @@ const Login = () => {
         backgroundBlendMode: "overlay",
       }}
     >
-      <div className="w-full  max-w-md p-8 bg-[#f0e6d2] bg-opacity-90 rounded-lg shadow-lg">
+      <div className="w-full max-w-md p-8 bg-[#f0e6d2] bg-opacity-90 rounded-lg shadow-lg">
         <div className="w-full text-gray-800">
           <div className="flex justify-center mb-8">
             <img src={logo} alt="Logo" className="w-24 h-24" />
@@ -156,9 +164,14 @@ const Login = () => {
             </div>
             <button
               type="submit"
-              className="w-full mt-6 bg-gradient-to-r from-[#d46a27] to-[#c25e1f] text-white font-semibold py-3 rounded-md hover:bg-gradient-to-l transition duration-200 text-lg"
+              disabled={loading}
+              className={`w-full mt-6 bg-gradient-to-r from-[#d46a27] to-[#c25e1f] text-white font-semibold py-3 rounded-md transition duration-200 text-lg ${
+                loading
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-gradient-to-l"
+              }`}
             >
-              Login
+              {loading ? "Logging in..." : "Login"}
             </button>
           </form>
           <p className="mt-6 text-center text-lg text-black">
@@ -172,6 +185,7 @@ const Login = () => {
           </p>
         </div>
       </div>
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };

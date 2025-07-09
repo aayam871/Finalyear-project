@@ -5,41 +5,74 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { FiEye, FiEyeOff } from "react-icons/fi";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const customerSchema = z.object({
-  firstName: z.string().min(1, "Naam lekhna xutais bhai"),
-  lastName: z.string().min(1, "Thar lekhna ta nabirsi yar"),
-  address: z.string().min(1, "Kaa basxas ta thahuna paryo ni"),
-  email: z.string().email("Valid email halna parcha ni"),
-  phone: z
+const passwordStrength = (password) => {
+  if (!password) return "";
+
+  const strongRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])(.{8,})$/;
+
+  const mediumRegex = /^(?=.*[a-z])(?=.*[A-Z]|.*\d)(.{8,})$/;
+
+  if (strongRegex.test(password)) return "Strong";
+  if (mediumRegex.test(password)) return "Medium";
+  return "Weak";
+};
+
+const baseSchema = z.object({
+  firstName: z
     .string()
-    .min(10, "Phone number must be at least 10 digits")
-    .max(10, "Phone number must be 10 digits")
-    .regex(/^\d{10}$/, "Phone number must be 10 digits"),
-  userName: z.string().min(5, "Username must be at least 5 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+    .min(1, "First name is required.")
+    .regex(/^[A-Za-z]+$/, "First name must contain only letters."),
+  lastName: z
+    .string()
+    .min(1, "Last name is required.")
+    .regex(/^[A-Za-z]+$/, "Last name must contain only letters."),
+  email: z
+    .string()
+    .min(1, "Email is required.")
+    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email address."),
+  userName: z
+    .string()
+    .min(5, "Username must be at least 5 characters.")
+    .regex(
+      /^[a-zA-Z0-9_]+$/,
+      "Username can only contain letters, numbers, and underscores."
+    ),
+  password: z.string().min(8, "Password must be at least 8 characters."),
 });
 
-const deliverySchema = customerSchema.extend({
+const deliverySchema = baseSchema.extend({
   citizenshipPhoto: z
     .any()
-    .refine((file) => file?.length === 1, "Citizenship photo is required"),
+    .refine((file) => file?.length === 1, "Front side is required."),
+  citizenshipPhotoBack: z
+    .any()
+    .refine((file) => file?.length === 1, "Back side is required."),
   drivingLicense: z
     .any()
-    .refine((file) => file?.length === 1, "Driving license photo is required"),
+    .refine((file) => file?.length === 1, "Driving license is required."),
 });
 
 const Signup = () => {
   const [role, setRole] = useState("customer");
-  const schema = role === "customer" ? customerSchema : deliverySchema;
+  const [showPassword, setShowPassword] = useState(false);
+  const [strength, setStrength] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const schema = role === "customer" ? baseSchema : deliverySchema;
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
+    mode: "onBlur",
   });
 
   const navigate = useNavigate();
@@ -48,7 +81,15 @@ const Signup = () => {
     reset();
   }, [role, reset]);
 
+  useEffect(() => {
+    const subscription = watch((value) => {
+      setStrength(passwordStrength(value.password));
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
+
   const onSubmit = async (data) => {
+    setIsSubmitting(true);
     try {
       if (role === "customer") {
         const response = await axios.post(
@@ -58,44 +99,54 @@ const Signup = () => {
         );
 
         if (response.status === 200) {
-          alert("Signup successful! Now verify OTP.");
+          toast.success("Signup successful! Now verify OTP.");
           navigate("/otp", { state: { role, email: data.email } });
         } else {
-          alert(response.data.errorMessage || "Signup failed.");
+          toast.error(response.data.errorMessage || "Signup failed.");
         }
       } else {
         const formData = new FormData();
-        formData.append("firstName", data.firstName);
-        formData.append("lastName", data.lastName);
-        formData.append("address", data.address);
-        formData.append("email", data.email);
-        formData.append("phone", data.phone);
-        formData.append("userName", data.userName);
-        formData.append("password", data.password);
-        formData.append("citizenshipPhoto", data.citizenshipPhoto[0]);
-        formData.append("drivingLicense", data.drivingLicense[0]);
+        Object.entries(data).forEach(([key, value]) => {
+          if (
+            key === "citizenshipPhoto" ||
+            key === "citizenshipPhotoBack" ||
+            key === "drivingLicense"
+          ) {
+            formData.append(key, value[0]);
+          } else {
+            formData.append(key, value);
+          }
+        });
 
         const response = await axios.post(
-          "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/auth/signup/delivery",
+          "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/auth/signup/agent",
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
 
         if (response.status === 200) {
-          alert("Signup successful! Now verify OTP.");
+          toast.success("Signup successful! Now verify OTP.");
           navigate("/otp", { state: { role, email: data.email } });
         } else {
-          alert(response.data.errorMessage || "Signup failed.");
+          toast.error(response.data.errorMessage || "Signup failed.");
         }
       }
     } catch (error) {
       console.error("Signup error:", error);
-      alert("Something went wrong.");
+      toast.error("Something went wrong.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const activeTab = "bg-[#d46a27] text-white";
   const inactiveTab = "bg-white text-black";
+
+  const Label = ({ label, required }) => (
+    <label className="block font-medium text-black text-sm">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+  );
 
   return (
     <div
@@ -134,13 +185,11 @@ const Signup = () => {
         >
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="block font-medium text-black text-sm">
-                First Name
-              </label>
+              <Label label="First Name" required />
               <input
                 type="text"
                 {...register("firstName")}
-                placeholder="Enter your First name"
+                placeholder="John"
                 className="w-full p-2 border border-gray-300 rounded-md focus:border-[#d46a27] focus:outline-none placeholder-gray-500 text-sm"
               />
               {errors.firstName && (
@@ -150,13 +199,11 @@ const Signup = () => {
               )}
             </div>
             <div className="flex-1">
-              <label className="block font-medium text-black text-sm">
-                Last Name
-              </label>
+              <Label label="Last Name" required />
               <input
                 type="text"
                 {...register("lastName")}
-                placeholder="Enter your Last name"
+                placeholder="Doe"
                 className="w-full p-2 border border-gray-300 rounded-md focus:border-[#d46a27] focus:outline-none placeholder-gray-500 text-sm"
               />
               {errors.lastName && (
@@ -168,57 +215,24 @@ const Signup = () => {
           </div>
 
           <div>
-            <label className="block font-medium text-black text-sm">
-              Address
-            </label>
-            <input
-              type="text"
-              {...register("address")}
-              placeholder="Enter your address"
-              className="w-full p-2 border border-gray-300 rounded-md focus:border-[#d46a27] focus:outline-none placeholder-gray-500 text-sm"
-            />
-            {errors.address && (
-              <p className="text-xs text-red-500">{errors.address.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block font-medium text-black text-sm">
-              Email
-            </label>
+            <Label label="Email" required />
             <input
               type="email"
               {...register("email")}
-              placeholder="Enter your email"
+              placeholder="john.doe@example.com"
               className="w-full p-2 border border-gray-300 rounded-md focus:border-[#d46a27] focus:outline-none placeholder-gray-500 text-sm"
             />
             {errors.email && (
               <p className="text-xs text-red-500">{errors.email.message}</p>
             )}
           </div>
-          <div>
-            <label className="block font-medium text-black text-sm">
-              Phone Number
-            </label>
-            <input
-              type="text"
-              {...register("phone")}
-              placeholder="Enter your Phone Number"
-              className="w-full p-2 border border-gray-300 rounded-md focus:border-[#d46a27] focus:outline-none placeholder-gray-500 text-sm"
-            />
-            {errors.phone && (
-              <p className="text-xs text-red-500">{errors.phone.message}</p>
-            )}
-          </div>
 
           <div>
-            <label className="block font-medium text-black text-sm">
-              Username
-            </label>
+            <Label label="Username" required />
             <input
               type="text"
               {...register("userName")}
-              placeholder="Enter your username"
+              placeholder="john_doe123"
               className="w-full p-2 border border-gray-300 rounded-md focus:border-[#d46a27] focus:outline-none placeholder-gray-500 text-sm"
             />
             {errors.userName && (
@@ -227,26 +241,43 @@ const Signup = () => {
           </div>
 
           <div>
-            <label className="block font-medium text-black text-sm">
-              Password
-            </label>
-            <input
-              type="password"
-              {...register("password")}
-              placeholder="Enter your password"
-              className="w-full p-2 border border-gray-300 rounded-md focus:border-[#d46a27] focus:outline-none placeholder-gray-500 text-sm"
-            />
+            <Label label="Password" required />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                {...register("password")}
+                placeholder="Create a strong password"
+                className="w-full p-2 pr-10 border border-gray-300 rounded-md focus:border-[#d46a27] focus:outline-none placeholder-gray-500 text-sm"
+              />
+              <div
+                className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <FiEye /> : <FiEyeOff />}
+              </div>
+            </div>
             {errors.password && (
               <p className="text-xs text-red-500">{errors.password.message}</p>
+            )}
+            {strength && (
+              <p
+                className={`text-xs mt-1 ${
+                  strength === "Strong"
+                    ? "text-green-600"
+                    : strength === "Medium"
+                    ? "text-yellow-600"
+                    : "text-red-600"
+                }`}
+              >
+                Password strength: {strength}
+              </p>
             )}
           </div>
 
           {role === "delivery" && (
             <>
               <div>
-                <label className="block font-medium text-black text-sm">
-                  Citizenship Photo
-                </label>
+                <Label label="Citizenship Photo (Front)" required />
                 <input
                   type="file"
                   {...register("citizenshipPhoto")}
@@ -260,9 +291,21 @@ const Signup = () => {
                 )}
               </div>
               <div>
-                <label className="block font-medium text-black text-sm">
-                  Driving License Photo
-                </label>
+                <Label label="Citizenship Photo (Back)" required />
+                <input
+                  type="file"
+                  {...register("citizenshipPhotoBack")}
+                  accept="image/*"
+                  className="w-full p-2 border border-gray-300 rounded-md bg-white"
+                />
+                {errors.citizenshipPhotoBack && (
+                  <p className="text-xs text-red-500">
+                    {errors.citizenshipPhotoBack.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label label="Driving License Photo" required />
                 <input
                   type="file"
                   {...register("drivingLicense")}
@@ -280,12 +323,22 @@ const Signup = () => {
 
           <button
             type="submit"
-            className="w-full mt-4 bg-gradient-to-r from-[#d46a27] to-[#c25e1f] text-white font-semibold py-2 rounded-md hover:bg-gradient-to-l transition duration-200 text-sm"
+            disabled={isSubmitting}
+            className={`w-full mt-4 bg-gradient-to-r from-[#d46a27] to-[#c25e1f] text-white font-semibold py-2 rounded-md transition duration-200 text-sm ${
+              isSubmitting
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-gradient-to-l"
+            }`}
           >
-            Register as {role === "customer" ? "Customer" : "Delivery Agent"}
+            {isSubmitting
+              ? "Registering..."
+              : `Register as ${
+                  role === "customer" ? "Customer" : "Delivery Agent"
+                }`}
           </button>
         </form>
       </div>
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };

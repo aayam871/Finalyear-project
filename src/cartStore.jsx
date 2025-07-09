@@ -3,7 +3,6 @@ import { create } from "zustand";
 export const useCartStore = create((set, get) => ({
   cart: [],
 
-  
   addToCart: (item) => {
     const cart = get().cart;
     const existingItem = cart.find((i) => i.id === item.id);
@@ -21,7 +20,6 @@ export const useCartStore = create((set, get) => ({
     }
   },
 
-  
   removeFromCart: (id) => {
     const cart = get().cart;
     const item = cart.find((i) => i.id === id);
@@ -39,6 +37,8 @@ export const useCartStore = create((set, get) => ({
     }
   },
 
-  
   clearCart: () => set({ cart: [] }),
+
+ 
+  setCartFromBackend: (items) => set({ cart: items }),
 }));

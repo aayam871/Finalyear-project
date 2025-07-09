@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const PROFILE_API =
-  "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/edit-profile";
-const PASSWORD_API =
-  "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/change-password";
-const IMAGE_UPLOAD_API =
-  "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/upload-profile-image";
+const PROFILE_FETCH_API =
+  "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/user/get-profile-detail";
+const PROFILE_UPDATE_API =
+  "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/user/update-profile";
+const PASSWORD_INITIATE_API =
+  "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/user/profile/initiate-password-change";
+const PASSWORD_CONFIRM_API =
+  "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/user/profile/confirm-password-change";
 
 const Cprofile = () => {
   const [formData, setFormData] = useState({
@@ -22,27 +24,28 @@ const Cprofile = () => {
     confirmPassword: "",
   });
 
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser) {
-      setFormData({
-        username: storedUser.username || "",
-        email: storedUser.email || "",
-        phone: storedUser.phone || "",
-        address: storedUser.address || "",
-      });
-      if (storedUser.imageUrl) {
-        setImagePreview(storedUser.imageUrl);
-      }
-    }
+    fetchUserProfile();
   }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const res = await axios.get(PROFILE_FETCH_API, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      setFormData(res.data.data);
+    } catch {
+      setMessage("❌ Failed to load profile.");
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -59,19 +62,12 @@ const Cprofile = () => {
     setLoading(true);
     setMessage("");
     try {
-      await axios.put(PROFILE_API, formData, {
+      await axios.put(PROFILE_UPDATE_API, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "ngrok-skip-browser-warning": "true",
         },
       });
-
-      const updatedUser = {
-        ...JSON.parse(localStorage.getItem("user")),
-        ...formData,
-      };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-
       setMessage("✅ Profile updated successfully.");
     } catch {
       setMessage("❌ Failed to update profile.");
@@ -90,9 +86,10 @@ const Cprofile = () => {
     }
 
     try {
-      await axios.put(
-        PASSWORD_API,
-        { oldPassword, newPassword },
+      
+      await axios.post(
+        PASSWORD_INITIATE_API,
+        { currentPassword: oldPassword },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -100,6 +97,19 @@ const Cprofile = () => {
           },
         }
       );
+
+      
+      await axios.post(
+        PASSWORD_CONFIRM_API,
+        { newPassword },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
       setMessage("✅ Password changed successfully.");
       setPasswordData({
         oldPassword: "",
@@ -111,38 +121,6 @@ const Cprofile = () => {
     }
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setImageFile(file);
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleImageUpload = async () => {
-    if (!imageFile) return setMessage("❌ Please select an image first.");
-    const formData = new FormData();
-    formData.append("image", imageFile);
-
-    try {
-      await axios.post(IMAGE_UPLOAD_API, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true",
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      setMessage("✅ Profile image uploaded.");
-    } catch {
-      setMessage("❌ Failed to upload image.");
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col items-center bg-gray-100 p-6">
       <div className="bg-white rounded-lg shadow-lg max-w-xl w-full p-8">
@@ -150,34 +128,7 @@ const Cprofile = () => {
           Customer Profile
         </h1>
 
-       
-        <div className="flex items-center space-x-4 mb-6">
-          {imagePreview ? (
-            <img
-              src={imagePreview}
-              alt="Profile Preview"
-              className="w-16 h-16 rounded-full object-cover border"
-            />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-              ?
-            </div>
-          )}
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="text-sm"
-          />
-          <button
-            onClick={handleImageUpload}
-            className="bg-orange-500 hover:bg-orange-600 text-white text-sm px-3 py-1 rounded"
-          >
-            Upload
-          </button>
-        </div>
-
-        
+        {/* Profile Update Form */}
         <form onSubmit={handleProfileUpdate} className="space-y-4">
           <Input
             label="Username"
@@ -204,7 +155,6 @@ const Cprofile = () => {
             value={formData.address}
             onChange={handleInputChange}
           />
-
           <button
             type="submit"
             className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 rounded"
@@ -214,7 +164,7 @@ const Cprofile = () => {
           </button>
         </form>
 
-       
+        {/* Password Change */}
         <div className="mt-10">
           <h2 className="text-xl font-semibold text-orange-700 mb-4 border-b pb-2">
             Change Password
@@ -250,6 +200,7 @@ const Cprofile = () => {
           </form>
         </div>
 
+        {/* Message */}
         {message && (
           <p className="mt-4 text-sm text-center font-medium text-red-600">
             {message}

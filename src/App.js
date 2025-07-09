@@ -5,6 +5,7 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
+import "leaflet/dist/leaflet.css";
 
 import Navbar from "./Navbar";
 import Footer from "./Footer";
@@ -21,12 +22,16 @@ import ProtectedRoute from "./ProtectedRoute";
 import Hudaixa from "./Hudaixa";
 import ContactUs from "./ContactUs";
 import Faqs from "./Faqs";
+import SuccessPage from "./SuccessPage";
+import FailurePage from "./FailurePage";
 import Cart from "./Cart";
 import Cprofile from "./Cprofile";
 import Support from "./Support";
+import OrdersPage from "./OrdersPage";
 import Refund from "./Refund";
 import Terms from "./Terms";
 import Privacy from "./Privacy";
+import Confirmation from "./Confirmation";
 
 import AdminDashboardRoutes from "./admin/AdminDashboardRoutes";
 import Aprofile from "./Aprofile";
@@ -53,10 +58,14 @@ function AppWrapper() {
         <Route path="/features" element={<Features />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/contact" element={<ContactUs />} />
+        <Route path="/confirmation" element={<Confirmation />} />
         <Route path="/faqs" element={<Faqs />} />
         <Route path="/support" element={<Support />} />
         <Route path="/refund-policy" element={<Refund />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/ordersPage" element={<OrdersPage />} />
+        <Route path="/success" element={<SuccessPage />} />
+        <Route path="/failure" element={<FailurePage />} />
         <Route path="/privacy" element={<Privacy />} />
 
         <Route

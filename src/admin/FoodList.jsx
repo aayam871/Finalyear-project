@@ -129,9 +129,9 @@ const FoodList = () => {
                 category: { name: editForm.category },
                 imageUrl: updatedImageUrl,
               }
-            : food
-        )
-      );
+             : food
+         )
+       );
       cancelEditing();
     } catch (err) {
       console.error("Failed to save edits", err);

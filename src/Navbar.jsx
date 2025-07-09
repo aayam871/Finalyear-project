@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { FiShoppingCart } from "react-icons/fi";
 import { useCartStore } from "./cartStore";
+import axios from "axios";
+import OrdersPage from "./OrdersPage";
 import logo from "./images/QuickBites_Logo_Transparent.png";
 import icon from "./images/icon.jpeg";
 
@@ -52,7 +54,7 @@ const Navbar = () => {
   };
 
   const getOrdersLink = () => {
-    if (primaryRole === "CUSTOMER") return "/corder";
+    if (primaryRole === "CUSTOMER") return "/ordersPage";
     if (primaryRole === "AGENT") return "/dorder";
     return "/";
   };
@@ -64,10 +66,28 @@ const Navbar = () => {
     { to: "/contact", label: "Contact Us" },
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (user?.accessToken) {
+        await axios.post(
+          "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/auth/logout",
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${user.accessToken}`,
+            },
+            withCredentials: true,
+          }
+        );
+      }
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      localStorage.removeItem("user");
+      // If you have user state, setUser(null);
+      navigate("/login");
+    }
   };
 
   const handleHomeClick = (e, path) => {
@@ -94,7 +114,6 @@ const Navbar = () => {
           </NavLink>
         </div>
 
-        
         <ul className="hidden md:flex space-x-12 font-semibold text-lg">
           {navItems.map(({ to, label }) => (
             <li key={to} className="relative">

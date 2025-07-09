@@ -6,10 +6,8 @@ import "swiper/css";
 import "swiper/css/pagination";
 
 
-const renderStars = (rating) => {
-  const fullStars = Math.round(rating);
-  return Array.from({ length: fullStars }, (_, i) => <span key={i}>⭐</span>);
-};
+const renderStars = (rating) =>
+  Array.from({ length: Math.round(rating) }, (_, i) => <span key={i}>⭐</span>);
 
 
 const customers = [
@@ -82,46 +80,59 @@ const ReviewCard = ({ name, text, rating }) => (
   </motion.div>
 );
 
+
+const ArrowButtons = ({ swiperRef }) => (
+  <div className="relative w-full mt-4">
+    <button
+      aria-label="Previous slide"
+      onClick={() => swiperRef.current?.slidePrev()}
+      className="absolute left-2 top-1/2 -translate-y-1/2 bg-orange-500 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-orange-600 focus:outline-none shadow-md z-10"
+    >
+      ‹
+    </button>
+    <button
+      aria-label="Next slide"
+      onClick={() => swiperRef.current?.slideNext()}
+      className="absolute right-2 top-1/2 -translate-y-1/2 bg-orange-500 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-orange-600 focus:outline-none shadow-md z-10"
+    >
+      ›
+    </button>
+  </div>
+);
+
+// Main Review Component
 const Review = () => {
   const customerSwiperRef = useRef(null);
   const agentSwiperRef = useRef(null);
 
-  const ArrowButtons = ({ swiperRef }) => (
-    <div className="relative w-full">
-      <button
-        onClick={() => swiperRef.current?.slidePrev()}
-        className="absolute left-2 top-1/2 -translate-y-1/2 bg-orange-500 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-orange-600 shadow-md z-10"
-      >
-        ‹
-      </button>
-      <button
-        onClick={() => swiperRef.current?.slideNext()}
-        className="absolute right-2 top-1/2 -translate-y-1/2 bg-orange-500 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-orange-600 shadow-md z-10"
-      >
-        ›
-      </button>
-    </div>
-  );
+  const swiperSettings = {
+    modules: [Autoplay, Pagination],
+    autoplay: {
+      delay: 3000, 
+      disableOnInteraction: false,
+    },
+    speed: 1500, 
+    pagination: { clickable: true },
+    loop: true,
+    spaceBetween: 30,
+    slidesPerView: 1,
+  };
+
   return (
-    <div className="py-12 px-4 md:px-20 bg-white text-gray-800" id="reviews">
+    <div className="py-16 px-4 md:px-20 bg-white text-gray-800" id="reviews">
       
       <motion.h2
-        className="text-3xl font-bold text-orange-500 text-center mb-6"
+        className="text-3xl font-bold text-orange-500 text-center mb-8"
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
       >
-        What our Customers Say
+        What Our Customers Say
       </motion.h2>
 
       <Swiper
-        modules={[Autoplay, Pagination]}
+        {...swiperSettings}
         onSwiper={(swiper) => (customerSwiperRef.current = swiper)}
-        autoplay={{ delay: 4000, disableOnInteraction: false }}
-        pagination={{ clickable: true }}
-        loop={true}
-        spaceBetween={30}
-        slidesPerView={1}
       >
         {customers.map((review, idx) => (
           <SwiperSlide key={idx}>
@@ -129,28 +140,21 @@ const Review = () => {
           </SwiperSlide>
         ))}
       </Swiper>
-
-      
       <ArrowButtons swiperRef={customerSwiperRef} />
 
-   
+     
       <motion.h2
-        className="text-3xl font-bold text-orange-500 text-center mt-16 mb-6"
+        className="text-3xl font-bold text-orange-500 text-center mt-20 mb-8"
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
       >
-        Review from our Delivery Agents
+        Reviews from Our Delivery Agents
       </motion.h2>
 
       <Swiper
-        modules={[Autoplay, Pagination]}
+        {...swiperSettings}
         onSwiper={(swiper) => (agentSwiperRef.current = swiper)}
-        autoplay={{ delay: 4000, disableOnInteraction: false }}
-        pagination={{ clickable: true }}
-        loop={true}
-        spaceBetween={30}
-        slidesPerView={1}
       >
         {agents.map((review, idx) => (
           <SwiperSlide key={idx}>
@@ -158,8 +162,6 @@ const Review = () => {
           </SwiperSlide>
         ))}
       </Swiper>
-
-     
       <ArrowButtons swiperRef={agentSwiperRef} />
     </div>
   );

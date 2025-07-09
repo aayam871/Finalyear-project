@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const API_BASE_URL = "https://8e9f-103-167-232-13.ngrok-free.app";
 
@@ -12,10 +14,24 @@ const AddFood = () => {
     image: null,
   });
 
-  const [message, setMessage] = useState("");
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const token = localStorage.getItem("token"); 
+  const token = localStorage.getItem("token");
+
+  // Fetch categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/public/foodCategories`);
+        setCategories(res.data?.categories || []);
+      } catch (err) {
+        toast.error("❌ Failed to load categories.");
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -27,6 +43,7 @@ const AddFood = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const data = new FormData();
     Object.entries(form).forEach(([key, value]) => data.append(key, value));
 
@@ -34,11 +51,11 @@ const AddFood = () => {
       setLoading(true);
       await axios.post(`${API_BASE_URL}/api/v1/admin/addFoodItem`, data, {
         headers: {
-          Authorization: `Bearer ${token}`, 
+          Authorization: `Bearer ${token}`,
           "ngrok-skip-browser-warning": "true",
         },
       });
-      setMessage("✅ Food item added successfully!");
+      toast.success("✅ Food item added successfully!");
       setForm({
         name: "",
         description: "",
@@ -47,8 +64,7 @@ const AddFood = () => {
         image: null,
       });
     } catch (err) {
-      console.error("Failed to add food item", err);
-      setMessage("❌ Failed to add food item. Try again.");
+      toast.error("❌ Failed to add food item. Try again.");
     } finally {
       setLoading(false);
     }
@@ -57,12 +73,6 @@ const AddFood = () => {
   return (
     <div className="max-w-xl mx-auto bg-white p-6 rounded shadow space-y-5">
       <h2 className="text-2xl font-bold text-orange-600">Add New Food Item</h2>
-
-      {message && (
-        <div className="text-sm p-2 rounded bg-yellow-100 border border-yellow-300 text-gray-800">
-          {message}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -105,15 +115,26 @@ const AddFood = () => {
 
         <div>
           <label className="block mb-1 font-medium">Category</label>
-          <input
+          <select
             name="category"
-            type="text"
             value={form.category}
-            placeholder="e.g. Momo"
             onChange={handleChange}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border rounded bg-white"
             required
-          />
+          >
+            <option value="" disabled>
+              -- Select Category --
+            </option>
+            {categories.length > 0 ? (
+              categories.map((cat) => (
+                <option key={cat._id} value={cat.name}>
+                  {cat.name}
+                </option>
+              ))
+            ) : (
+              <option disabled>Loading categories...</option>
+            )}
+          </select>
         </div>
 
         <div>
@@ -141,6 +162,8 @@ const AddFood = () => {
           {loading ? "Submitting..." : "Add Food Item"}
         </button>
       </form>
+
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };
