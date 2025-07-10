@@ -9,6 +9,10 @@ const PASSWORD_INITIATE_API =
   "https://5aeb0071168a.ngrok-free.app/api/v1/user/profile/initiate-password-change";
 const PASSWORD_CONFIRM_API =
   "https://5aeb0071168a.ngrok-free.app/api/v1/user/profile/confirm-password-change";
+const EMAIL_INITIATE_API =
+  "https://5aeb0071168a.ngrok-free.app/api/v1/user/profile/initiate-email-change";
+const EMAIL_CONFIRM_API =
+  "https://5aeb0071168a.ngrok-free.app/api/v1/user/profile/confirm-email-change";
 
 const Cprofile = () => {
   const [formData, setFormData] = useState({
@@ -23,6 +27,12 @@ const Cprofile = () => {
     newPassword: "",
     confirmPassword: "",
   });
+
+  const [emailChangeData, setEmailChangeData] = useState({
+    newEmail: "",
+    otp: "",
+  });
+  const [emailChangeStep, setEmailChangeStep] = useState(1);
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -56,6 +66,11 @@ const Cprofile = () => {
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEmailChangeInput = (e) => {
+    const { name, value } = e.target;
+    setEmailChangeData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleProfileUpdate = async (e) => {
@@ -117,6 +132,59 @@ const Cprofile = () => {
       });
     } catch {
       setMessage("❌ Failed to change password.");
+    }
+  };
+
+  const handleInitiateEmailChange = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+    try {
+      await axios.post(
+        EMAIL_INITIATE_API,
+        { newEmail: emailChangeData.newEmail },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      setMessage("OTP sent to new email. Please check your inbox.");
+      setEmailChangeStep(2);
+    } catch {
+      setMessage("❌ Failed to initiate email change.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmEmailChange = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+    try {
+      await axios.post(
+        EMAIL_CONFIRM_API,
+        {
+          newEmail: emailChangeData.newEmail,
+          otp: emailChangeData.otp,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+      setMessage("✅ Email changed successfully.");
+      setEmailChangeData({ newEmail: "", otp: "" });
+      setEmailChangeStep(1);
+      fetchUserProfile();
+    } catch {
+      setMessage("❌ Failed to confirm email change.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -197,6 +265,55 @@ const Cprofile = () => {
               Change Password
             </button>
           </form>
+        </div>
+
+        {/* Email Change */}
+        <div className="mt-10">
+          <h2 className="text-xl font-semibold text-orange-700 mb-4 border-b pb-2">
+            Change Email
+          </h2>
+          {emailChangeStep === 1 ? (
+            <form onSubmit={handleInitiateEmailChange} className="space-y-4">
+              <Input
+                label="New Email"
+                name="newEmail"
+                type="email"
+                value={emailChangeData.newEmail}
+                onChange={handleEmailChangeInput}
+              />
+              <button
+                type="submit"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded"
+                disabled={loading}
+              >
+                {loading ? "Sending OTP..." : "Send OTP"}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleConfirmEmailChange} className="space-y-4">
+              <Input
+                label="New Email"
+                name="newEmail"
+                type="email"
+                value={emailChangeData.newEmail}
+                onChange={handleEmailChangeInput}
+                disabled
+              />
+              <Input
+                label="OTP"
+                name="otp"
+                value={emailChangeData.otp}
+                onChange={handleEmailChangeInput}
+              />
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded"
+                disabled={loading}
+              >
+                {loading ? "Verifying..." : "Verify & Change Email"}
+              </button>
+            </form>
+          )}
         </div>
 
         {/* Message */}

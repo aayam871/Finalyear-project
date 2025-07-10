@@ -1,23 +1,20 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { axiosWithRefresh } from "../axiosWithRefresh";
 
 const DeliveryAgents = () => {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAgents = async () => {
+    setLoading(true);
     try {
-      const res = await axios.get(
-        "https://5aeb0071168a.ngrok-free.app/api/v1/admin/pending-agents"
-      );
-      console.log("Backend response data:", res.data);
-      setAgents(
-        (res.data ?? []).filter(
-          (agent) => agent.otpverified === true && agent.adminApproved === false
-        )
-      );
-    } catch (error) {
-      console.error("Error fetching agents", error);
+      const res = await axiosWithRefresh({
+        method: "get",
+        url: "/api/v1/admin/pending-agents",
+      });
+      setAgents(res.data.agents);
+    } catch (err) {
+      console.error("Error fetching agents", err);
       setAgents([]);
     } finally {
       setLoading(false);
@@ -26,12 +23,17 @@ const DeliveryAgents = () => {
 
   const updateStatus = async (id, action) => {
     try {
-      const url =
-        action === "verified"
-          ? `https://5aeb0071168a.ngrok-free.app/api/v1/admin/approve-agent/${id}`
-          : `https://5aeb0071168a.ngrok-free.app/api/v1/admin/reject-agent/${id}`;
-
-      await axios.post(url);
+      if (action === "approve") {
+        await axiosWithRefresh({
+          method: "post",
+          url: `/api/v1/admin/approve-agent/${id}`,
+        });
+      } else if (action === "reject") {
+        await axiosWithRefresh({
+          method: "post",
+          url: `/api/v1/admin/reject-agent/${id}`,
+        });
+      }
 
       // Remove the agent from the list after approval/rejection
       setAgents((prev) => prev.filter((agent) => agent.id !== id));
@@ -85,13 +87,13 @@ const DeliveryAgents = () => {
 
               <div className="mt-3 flex gap-2">
                 <button
-                  onClick={() => updateStatus(agent.id, "verified")}
+                  onClick={() => updateStatus(agent.id, "approve")}
                   className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
                 >
                   Accept
                 </button>
                 <button
-                  onClick={() => updateStatus(agent.id, "rejected")}
+                  onClick={() => updateStatus(agent.id, "reject")}
                   className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
                 >
                   Reject

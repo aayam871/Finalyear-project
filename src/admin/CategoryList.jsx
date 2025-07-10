@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { axiosWithRefresh } from "../axiosWithRefresh";
 
 const API_BASE_URL = "https://5aeb0071168a.ngrok-free.app";
 
@@ -22,18 +23,13 @@ const CategoryList = () => {
   }, []);
 
   const fetchCategories = async () => {
+    setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/public/foodCategories`, {
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
+      const res = await axiosWithRefresh({
+        method: "get",
+        url: "/api/v1/admin/foodCategory",
       });
-      const data = Array.isArray(res.data) ? res.data : res.data.data || [];
-      const updated = data.map((cat) => ({
-        ...cat,
-        isActive: cat.isActive ?? true,
-      }));
-      setCategories(updated);
+      setCategories(res.data.foodCategories);
     } catch (err) {
       console.error("Error loading categories:", err);
       setCategories([]);
@@ -97,41 +93,11 @@ const CategoryList = () => {
 
   const saveEdits = async () => {
     try {
-      let updatedImageUrl = editForm.imageUrl;
-
-      if (editForm.imageFile) {
-        const formData = new FormData();
-        formData.append("file", editForm.imageFile);
-
-        const uploadRes = await axios.post(
-          `${API_BASE_URL}/api/v1/admin/upload`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "multipart/form-data",
-              "ngrok-skip-browser-warning": "true",
-            },
-          }
-        );
-        updatedImageUrl = uploadRes.data.imageUrl;
-      }
-
-      await axios.patch(
-        `${API_BASE_URL}/api/v1/admin/foodCategory/${editingId}`,
-        {
-          name: editForm.name,
-          description: editForm.description,
-          imageUrl: updatedImageUrl,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true",
-          },
-        }
-      );
-
+      await axiosWithRefresh({
+        method: "put",
+        url: `/api/v1/admin/foodCategory/${editingId}`,
+        data: { ...editForm },
+      });
       setCategories((prev) =>
         prev.map((cat) =>
           cat.id === editingId
@@ -158,11 +124,9 @@ const CategoryList = () => {
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/api/v1/admin/foodCategory/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true",
-        },
+      await axiosWithRefresh({
+        method: "delete",
+        url: `/api/v1/admin/foodCategory/${id}`,
       });
       setCategories((prev) => prev.filter((cat) => cat.id !== id));
       if (editingId === id) cancelEditing();

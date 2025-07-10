@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
-
-const API_BASE_URL = "https://5aeb0071168a.ngrok-free.app";
+import { axiosWithRefresh } from "../axiosWithRefresh";
 
 const AddCategory = () => {
   const [name, setName] = useState("");
@@ -9,21 +7,18 @@ const AddCategory = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const token = JSON.parse(localStorage.getItem("user"))?.accessToken;
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const data = new FormData();
-    data.append("name", name);
-    data.append("image", image);
-
+    setLoading(true);
     try {
-      setLoading(true);
-      await axios.post(`${API_BASE_URL}/api/v1/admin/addFoodCategory`, data, {
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-          Authorization: `Bearer ${token}`, // ✅ header added here
-        },
+      const formData = new FormData();
+      formData.append("name", name);
+      if (image) formData.append("image", image);
+      await axiosWithRefresh({
+        method: "post",
+        url: "/api/v1/admin/addFoodCategory",
+        data: formData,
+        headers: { "Content-Type": "multipart/form-data" },
       });
       setMessage("✅ Category added successfully!");
       setName("");

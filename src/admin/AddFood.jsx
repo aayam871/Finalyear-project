@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { axiosWithRefresh } from "../axiosWithRefresh";
 
 const API_BASE_URL = "https://5aeb0071168a.ngrok-free.app";
 
@@ -47,17 +48,16 @@ const AddFood = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const data = new FormData();
-    Object.entries(form).forEach(([key, value]) => data.append(key, value));
-
+    setLoading(true);
     try {
-      setLoading(true);
-      await axios.post(`${API_BASE_URL}/api/v1/admin/addFoodItem`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true",
-        },
+      const formData = new FormData();
+      Object.entries(form).forEach(([key, value]) => formData.append(key, value));
+
+      await axiosWithRefresh({
+        method: "post",
+        url: "/api/v1/admin/addFoodItem",
+        data: formData,
+        headers: { "Content-Type": "multipart/form-data" },
       });
       toast.success("✅ Food item added successfully!");
       setForm({
@@ -69,9 +69,8 @@ const AddFood = () => {
       });
     } catch (err) {
       toast.error("❌ Failed to add food item. Try again.");
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   return (
