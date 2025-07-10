@@ -8,7 +8,7 @@ const DeliveryAgents = () => {
   const fetchAgents = async () => {
     try {
       const res = await axios.get(
-        "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/admin/pending-agents"
+        "https://5aeb0071168a.ngrok-free.app/api/v1/admin/pending-agents"
       );
       console.log("Backend response data:", res.data);
       setAgents(
@@ -28,8 +28,8 @@ const DeliveryAgents = () => {
     try {
       const url =
         action === "verified"
-          ? `https://8e9f-103-167-232-13.ngrok-free.app/api/v1/admin/approve-agent/${id}`
-          : `https://8e9f-103-167-232-13.ngrok-free.app/api/v1/admin/reject-agent/${id}`;
+          ? `https://5aeb0071168a.ngrok-free.app/api/v1/admin/approve-agent/${id}`
+          : `https://5aeb0071168a.ngrok-free.app/api/v1/admin/reject-agent/${id}`;
 
       await axios.post(url);
 

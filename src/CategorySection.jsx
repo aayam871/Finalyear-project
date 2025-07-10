@@ -5,7 +5,7 @@ const CategorySection = ({ category, items, onAddToCart }) => (
     <div className="flex items-center gap-3 mb-6">
       {category?.imageUrl && (
         <img
-          src={`https://8e9f-103-167-232-13.ngrok-free.app/uploads/images/foodCategoryImages/${category.imageUrl}`}
+          src={`https://5aeb0071168a.ngrok-free.app/uploads/images/foodCategoryImages/${category.imageUrl}`}
           alt={category.name}
           className="w-8 h-8 rounded-full object-cover"
           loading="lazy"

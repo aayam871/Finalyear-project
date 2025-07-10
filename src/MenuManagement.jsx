@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const BASE_URL = "https://8e9f-103-167-232-13.ngrok-free.app";
+const BASE_URL = "https://5aeb0071168a.ngrok-free.app";
 
 const MenuManagement = () => {
   const [items, setItems] = useState([]);

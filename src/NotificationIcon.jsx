@@ -12,7 +12,7 @@ const NotificationIcon = () => {
     const fetchPending = async () => {
       try {
         const res = await axios.get(
-          "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/admin/pending-agents"
+          "https://5aeb0071168a.ngrok-free.app/api/v1/admin/pending-agents"
         );
 
         

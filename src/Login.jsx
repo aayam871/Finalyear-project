@@ -12,6 +12,7 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Show success toast after registration
   useEffect(() => {
     if (location.state?.showMessage) {
       toast.success(
@@ -20,6 +21,7 @@ const Login = () => {
     }
   }, [location.state]);
 
+  // If user is already logged in, redirect based on role
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (user && user.roles) {
@@ -35,7 +37,9 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (loading) return; // prevent duplicate
+
+    if (loading) return;
+
     if (!username.trim() || !password.trim()) {
       toast.error("Please login with your credentials!");
       return;
@@ -45,7 +49,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/auth/login",
+        "https://5aeb0071168a.ngrok-free.app/api/v1/auth/login",
         { username, password },
         {
           headers: {

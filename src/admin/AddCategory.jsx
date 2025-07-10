@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const API_BASE_URL = "https://8e9f-103-167-232-13.ngrok-free.app";
+const API_BASE_URL = "https://5aeb0071168a.ngrok-free.app";
 
 const AddCategory = () => {
   const [name, setName] = useState("");
@@ -9,7 +9,7 @@ const AddCategory = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const token = localStorage.getItem("token"); 
+  const token = JSON.parse(localStorage.getItem("user"))?.accessToken;
 
   const handleSubmit = async (e) => {
     e.preventDefault();

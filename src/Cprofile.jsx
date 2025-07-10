@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 const PROFILE_FETCH_API =
-  "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/user/get-profile-detail";
+  "https://5aeb0071168a.ngrok-free.app/api/v1/user/get-profile-detail";
 const PROFILE_UPDATE_API =
-  "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/user/update-profile";
+  "https://5aeb0071168a.ngrok-free.app/api/v1/user/update-profile";
 const PASSWORD_INITIATE_API =
-  "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/user/profile/initiate-password-change";
+  "https://5aeb0071168a.ngrok-free.app/api/v1/user/profile/initiate-password-change";
 const PASSWORD_CONFIRM_API =
-  "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/user/profile/confirm-password-change";
+  "https://5aeb0071168a.ngrok-free.app/api/v1/user/profile/confirm-password-change";
 
 const Cprofile = () => {
   const [formData, setFormData] = useState({
@@ -27,7 +27,8 @@ const Cprofile = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user"));
+  const token = user?.accessToken;
 
   useEffect(() => {
     fetchUserProfile();
@@ -86,7 +87,6 @@ const Cprofile = () => {
     }
 
     try {
-      
       await axios.post(
         PASSWORD_INITIATE_API,
         { currentPassword: oldPassword },
@@ -98,7 +98,6 @@ const Cprofile = () => {
         }
       );
 
-      
       await axios.post(
         PASSWORD_CONFIRM_API,
         { newPassword },

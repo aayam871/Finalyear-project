@@ -1,10 +1,101 @@
 import React, { useState, useEffect } from "react";
 import Agent from "./images/Agent.png";
 import { motion } from "framer-motion";
+import { addToCartHandler } from "./addToCartHandler";
 import { useCartStore } from "./cartStore";
+import toast from "react-hot-toast";
 
-const baseImageURL =
-  "https://8e9f-103-167-232-13.ngrok-free.app/uploads/images/foodItemImages/";
+const BASE_URL = "https://5aeb0071168a.ngrok-free.app";
+const baseImageURL = `${BASE_URL}/uploads/images/foodItemImages/`;
+
+const SearchResultItem = ({ item, onAddToCart }) => {
+  const [selectedVariantId, setSelectedVariantId] = useState(
+    item.foodVariants?.[0]?.id || null
+  );
+  const [justAdded, setJustAdded] = useState(false);
+  const [buttonDisabled, setButtonDisabled] = useState(false);
+  const { cart, setCartFromBackend } = useCartStore();
+
+  const alreadyInCart = cart.some(
+    (cartItem) =>
+      (cartItem.foodItemId === item.id || cartItem.id === item.id) &&
+      (cartItem.foodVariantId === selectedVariantId ||
+        cartItem.variantId === selectedVariantId)
+  );
+
+  return (
+    <li className="flex flex-col space-y-2 bg-gray-50 p-4 rounded-lg shadow-sm">
+      <div className="flex items-center space-x-4">
+        <img
+          src={`${baseImageURL}${item.imageUrl}`}
+          alt={item.name}
+          className="w-16 h-16 rounded object-cover"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = "https://via.placeholder.com/64";
+          }}
+        />
+        <div className="flex-1">
+          <p className="font-medium text-gray-700">{item.name}</p>
+          <p className="text-sm text-orange-500">
+            Rs{" "}
+            {item.foodVariants?.find((v) => v.id === selectedVariantId)
+              ?.price ?? "N/A"}
+          </p>
+        </div>
+      </div>
+
+      {item.foodVariants?.length > 1 && (
+        <select
+          value={selectedVariantId}
+          onChange={(e) => setSelectedVariantId(Number(e.target.value))}
+          className="w-full p-2 border border-orange-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
+        >
+          {item.foodVariants.map((variant) => (
+            <option key={variant.id} value={variant.id}>
+              {variant.name} – Rs. {variant.price}
+            </option>
+          ))}
+        </select>
+      )}
+
+      <button
+        onClick={async () => {
+          if (alreadyInCart) {
+            toast("Item already in cart", {
+              icon: "⚠️",
+              style: {
+                background: "#fff7ed",
+                border: "1px solid #f97316",
+                color: "#d97706",
+              },
+            });
+            return;
+          }
+          await addToCartHandler({
+            food: item,
+            selectedVariantId,
+            setJustAdded,
+            setButtonDisabled,
+            setCartFromBackend,
+          });
+        }}
+        disabled={justAdded || alreadyInCart || buttonDisabled}
+        className={`mt-1 text-sm text-white ${
+          justAdded || alreadyInCart
+            ? "bg-green-500"
+            : "bg-orange-500 hover:bg-orange-600"
+        } px-3 py-1 rounded-full ${
+          justAdded || alreadyInCart || buttonDisabled
+            ? "opacity-70 cursor-not-allowed"
+            : ""
+        }`}
+      >
+        {justAdded || alreadyInCart ? "✔ Added" : "Add to Cart"}
+      </button>
+    </li>
+  );
+};
 
 const Hero = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,11 +103,10 @@ const Hero = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
-
-  const addToCart = useCartStore((state) => state.addToCart);
+  const setCartFromBackend = useCartStore((state) => state.setCartFromBackend);
 
   useEffect(() => {
-    fetch("https://8e9f-103-167-232-13.ngrok-free.app/public/foodItems", {
+    fetch(`${BASE_URL}/public/foodItems`, {
       headers: { "ngrok-skip-browser-warning": "true" },
     })
       .then((res) => res.json())
@@ -48,28 +138,66 @@ const Hero = () => {
     return () => clearTimeout(handler);
   }, [searchTerm, menuItems]);
 
-  const handleAddToCart = (food) => {
-    const userString = localStorage.getItem("user");
-    if (!userString) {
-      alert("Please login as Customer or Admin to order.");
+  const handleAddToCart = async (food) => {
+    const userData = localStorage.getItem("user");
+    if (!userData) {
+      toast.error("Please login as Customer or Admin to order.");
       return;
     }
 
     try {
-      const user = JSON.parse(userString);
-      const roles = user.roles || [];
-      const canOrder =
-        roles.includes("ROLE_ADMIN") || roles.includes("ROLE_CUSTOMER");
-
-      if (!canOrder) {
-        alert("Please login as Customer or Admin to order.");
+      const user = JSON.parse(userData);
+      const token = user.accessToken;
+      if (!token) {
+        toast.error("Please login again.");
         return;
       }
 
-      addToCart(food);
-    } catch (err) {
-      console.error("Error reading user from localStorage", err);
-      alert("Please login as Customer or Admin to order.");
+      if (!food.selectedVariantId) {
+        toast.error("Please select a variant");
+        return;
+      }
+
+      // POST to backend to add cart item
+      const response = await fetch(`${BASE_URL}/api/v1/cart/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: JSON.stringify({
+          foodItemId: food.id,
+          foodVariantId: food.selectedVariantId,
+          quantity: 1,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        toast.error(`Failed to add to cart: ${errorText}`);
+        return;
+      }
+
+      toast.success(`${food.name} added to cart!`);
+
+      // Fetch updated cart from backend
+      const cartRes = await fetch(`${BASE_URL}/api/v1/cart`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+
+      if (cartRes.ok) {
+        const cartData = await cartRes.json();
+        if (Array.isArray(cartData.items)) {
+          setCartFromBackend(cartData.items);
+        }
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast.error("Something went wrong. Please try again.");
     }
   };
 
@@ -139,34 +267,11 @@ const Hero = () => {
                   </h3>
                   <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {results.map((item) => (
-                      <li
+                      <SearchResultItem
                         key={item.id}
-                        className="flex items-center space-x-4 bg-gray-50 p-2 rounded-lg shadow-sm"
-                      >
-                        <img
-                          src={`${baseImageURL}${item.imageUrl}`}
-                          alt={item.name}
-                          className="w-16 h-16 rounded object-cover"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = "https://via.placeholder.com/64";
-                          }}
-                        />
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-700">
-                            {item.name}
-                          </p>
-                          <p className="text-sm text-orange-500">
-                            Rs {item.price}
-                          </p>
-                          <button
-                            onClick={() => handleAddToCart(item)}
-                            className="mt-1 text-sm text-white bg-orange-500 hover:bg-orange-600 px-3 py-1 rounded-full"
-                          >
-                            Add to Cart
-                          </button>
-                        </div>
-                      </li>
+                        item={item}
+                        onAddToCart={handleAddToCart}
+                      />
                     ))}
                   </ul>
                 </>

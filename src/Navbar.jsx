@@ -3,7 +3,6 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { FiShoppingCart } from "react-icons/fi";
 import { useCartStore } from "./cartStore";
 import axios from "axios";
-import OrdersPage from "./OrdersPage";
 import logo from "./images/QuickBites_Logo_Transparent.png";
 import icon from "./images/icon.jpeg";
 
@@ -11,7 +10,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const { cart } = useCartStore();
+  const { cart, setCartFromBackend } = useCartStore();
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -24,6 +23,41 @@ const Navbar = () => {
       setUser(null);
     }
   }, [location]);
+
+  useEffect(() => {
+    const fetchCartIfLoggedIn = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user?.accessToken) return;
+
+        const res = await axios.get(
+          "https://5aeb0071168a.ngrok-free.app/api/v1/cart",
+          {
+            headers: {
+              Authorization: `Bearer ${user.accessToken}`,
+              "ngrok-skip-browser-warning": "true",
+            },
+          }
+        );
+
+        if (Array.isArray(res.data.items)) {
+          setCartFromBackend(res.data.items);
+        }
+      } catch (error) {
+        console.error("Error restoring cart:", error);
+      }
+    };
+
+    fetchCartIfLoggedIn();
+  }, [location, setCartFromBackend]);
+
+  // Restore cart from localStorage if present
+  const localCart = localStorage.getItem("localCart");
+  if (localCart) {
+    try {
+      setCartFromBackend(JSON.parse(localCart));
+    } catch {}
+  }
 
   const roles = user?.roles || [];
 
@@ -71,7 +105,7 @@ const Navbar = () => {
       const user = JSON.parse(localStorage.getItem("user"));
       if (user?.accessToken) {
         await axios.post(
-          "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/auth/logout",
+          "https://5aeb0071168a.ngrok-free.app/api/v1/auth/logout",
           {},
           {
             headers: {
@@ -85,7 +119,7 @@ const Navbar = () => {
       console.error("Logout error:", err);
     } finally {
       localStorage.removeItem("user");
-      // If you have user state, setUser(null);
+      setCartFromBackend([]); // clear cart on logout
       navigate("/login");
     }
   };

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const API_BASE_URL = "https://8e9f-103-167-232-13.ngrok-free.app";
+const API_BASE_URL = "https://5aeb0071168a.ngrok-free.app";
 
 const FoodList = () => {
   const [foods, setFoods] = useState([]);
@@ -16,7 +16,8 @@ const FoodList = () => {
     imageUrl: "",
   });
 
-  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user"));
+  const token = user?.accessToken;
 
   useEffect(() => {
     fetchFoods();
@@ -129,9 +130,9 @@ const FoodList = () => {
                 category: { name: editForm.category },
                 imageUrl: updatedImageUrl,
               }
-             : food
-         )
-       );
+            : food
+        )
+      );
       cancelEditing();
     } catch (err) {
       console.error("Failed to save edits", err);

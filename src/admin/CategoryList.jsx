@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const API_BASE_URL = "https://8e9f-103-167-232-13.ngrok-free.app";
+const API_BASE_URL = "https://5aeb0071168a.ngrok-free.app";
 
 const CategoryList = () => {
   const [categories, setCategories] = useState([]);
@@ -14,7 +14,8 @@ const CategoryList = () => {
     imageUrl: "",
   });
 
-  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user"));
+  const token = user?.accessToken;
 
   useEffect(() => {
     fetchCategories();
@@ -98,7 +99,6 @@ const CategoryList = () => {
     try {
       let updatedImageUrl = editForm.imageUrl;
 
-      
       if (editForm.imageFile) {
         const formData = new FormData();
         formData.append("file", editForm.imageFile);

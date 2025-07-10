@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const API_BASE_URL = "https://8e9f-103-167-232-13.ngrok-free.app";
+const API_BASE_URL = "https://5aeb0071168a.ngrok-free.app";
 
 const ManageVariants = () => {
   const [foodItems, setFoodItems] = useState([]);
@@ -13,7 +13,8 @@ const ManageVariants = () => {
   const [editId, setEditId] = useState(null);
   const [selectedFoodItemId, setSelectedFoodItemId] = useState("");
 
-  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user"));
+  const token = user?.accessToken;
 
   useEffect(() => {
     fetchFoodItemsWithVariants();
@@ -193,7 +194,6 @@ const ManageVariants = () => {
         </div>
       </form>
 
-      
       <div className="space-y-8">
         {foodItems.length === 0 ? (
           <p>No food items found.</p>

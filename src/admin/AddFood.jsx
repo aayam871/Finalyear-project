@@ -3,7 +3,7 @@ import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const API_BASE_URL = "https://8e9f-103-167-232-13.ngrok-free.app";
+const API_BASE_URL = "https://5aeb0071168a.ngrok-free.app";
 
 const AddFood = () => {
   const [form, setForm] = useState({
@@ -17,16 +17,20 @@ const AddFood = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user"));
+  const token = user?.accessToken;
 
-  // Fetch categories from API
+  // Fetch categories safely
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/public/foodCategories`);
-        setCategories(res.data?.categories || []);
+        console.log("categories fetched:", res.data);
+        setCategories(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        toast.error("❌ Failed to load categories.");
+        console.error("Failed to fetch categories:", err);
+        toast.error("Failed to load categories.");
+        setCategories([]);
       }
     };
 
@@ -125,9 +129,9 @@ const AddFood = () => {
             <option value="" disabled>
               -- Select Category --
             </option>
-            {categories.length > 0 ? (
+            {Array.isArray(categories) && categories.length > 0 ? (
               categories.map((cat) => (
-                <option key={cat._id} value={cat.name}>
+                <option key={cat.id} value={cat.id}>
                   {cat.name}
                 </option>
               ))

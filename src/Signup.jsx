@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import Otp from "./Otp.jsx";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,14 +8,14 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+// Username must start with a letter, only letters and numbers, min 3 char
+const USERNAME_REGEX = /^[A-Za-z][A-Za-z0-9]{2,}$/;
+
 const passwordStrength = (password) => {
   if (!password) return "";
-
   const strongRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])(.{8,})$/;
-
   const mediumRegex = /^(?=.*[a-z])(?=.*[A-Z]|.*\d)(.{8,})$/;
-
   if (strongRegex.test(password)) return "Strong";
   if (mediumRegex.test(password)) return "Medium";
   return "Weak";
@@ -37,10 +36,10 @@ const baseSchema = z.object({
     .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email address."),
   userName: z
     .string()
-    .min(5, "Username must be at least 5 characters.")
+    .min(3, "Username must be at least 3 characters.")
     .regex(
-      /^[a-zA-Z0-9_]+$/,
-      "Username can only contain letters, numbers, and underscores."
+      USERNAME_REGEX,
+      "Username must start with a letter and contain only letters and numbers."
     ),
   password: z.string().min(8, "Password must be at least 8 characters."),
 });
@@ -63,6 +62,7 @@ const Signup = () => {
   const [strength, setStrength] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const schema = role === "customer" ? baseSchema : deliverySchema;
+  const navigate = useNavigate();
 
   const {
     register,
@@ -75,8 +75,6 @@ const Signup = () => {
     mode: "onBlur",
   });
 
-  const navigate = useNavigate();
-
   useEffect(() => {
     reset();
   }, [role, reset]);
@@ -88,22 +86,39 @@ const Signup = () => {
     return () => subscription.unsubscribe();
   }, [watch]);
 
+  // Username live validation
+  const usernameValue = watch("userName") || "";
+  const isUsernameValid = USERNAME_REGEX.test(usernameValue);
+  const showUsernameError =
+    usernameValue.length > 0 && !isUsernameValid && usernameValue.length >= 3;
+
   const onSubmit = async (data) => {
+    if (strength === "Weak") {
+      toast.error("Password strength is too weak!");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       if (role === "customer") {
         const response = await axios.post(
-          "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/auth/signup/customer",
+          "https://5aeb0071168a.ngrok-free.app/api/v1/auth/signup/customer",
           data,
           { headers: { "Content-Type": "application/json" } }
         );
 
-        if (response.status === 200) {
-          toast.success("Signup successful! Now verify OTP.");
-          navigate("/otp", { state: { role, email: data.email } });
-        } else {
-          toast.error(response.data.errorMessage || "Signup failed.");
+        if (response.status !== 200 && response.status !== 201) {
+          const errorMessage =
+            response.data?.errorMessage ||
+            response.data?.message ||
+            "Signup failed.";
+          toast.error(errorMessage);
+          setIsSubmitting(false);
+          return;
         }
+
+        toast.success("Signup successful! Now verify OTP.");
+        navigate("/otp", { state: { role, email: data.email } });
       } else {
         const formData = new FormData();
         Object.entries(data).forEach(([key, value]) => {
@@ -112,28 +127,50 @@ const Signup = () => {
             key === "citizenshipPhotoBack" ||
             key === "drivingLicense"
           ) {
-            formData.append(key, value[0]);
+            if (value?.[0]) {
+              formData.append(key, value[0]);
+            }
           } else {
             formData.append(key, value);
           }
         });
 
         const response = await axios.post(
-          "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/auth/signup/agent",
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
+          "https://5aeb0071168a.ngrok-free.app/api/v1/auth/signup/agent",
+          formData
         );
 
-        if (response.status === 200) {
-          toast.success("Signup successful! Now verify OTP.");
-          navigate("/otp", { state: { role, email: data.email } });
-        } else {
-          toast.error(response.data.errorMessage || "Signup failed.");
+        if (response.status !== 200 && response.status !== 201) {
+          const errorMessage =
+            response.data?.errorMessage ||
+            response.data?.message ||
+            "Signup failed.";
+          toast.error(errorMessage);
+          setIsSubmitting(false);
+          return;
         }
+
+        toast.success("Signup successful! Now verify OTP.");
+        navigate("/otp", { state: { role, email: data.email } });
       }
     } catch (error) {
       console.error("Signup error:", error);
-      toast.error("Something went wrong.");
+      if (error.response) {
+        const data = error.response.data;
+        const errorMessage =
+          data?.errorMessage ||
+          data?.message ||
+          data?.detail ||
+          (Array.isArray(data?.errors) && data.errors.length > 0
+            ? data.errors[0].message
+            : null) ||
+          `Server error: ${error.response.status}`;
+        toast.error(errorMessage);
+      } else if (error.request) {
+        toast.error("No response from server. Please try again.");
+      } else {
+        toast.error("An error occurred during signup.");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -232,11 +269,17 @@ const Signup = () => {
             <input
               type="text"
               {...register("userName")}
-              placeholder="john_doe123"
+              placeholder="johnDoe123"
               className="w-full p-2 border border-gray-300 rounded-md focus:border-[#d46a27] focus:outline-none placeholder-gray-500 text-sm"
             />
             {errors.userName && (
               <p className="text-xs text-red-500">{errors.userName.message}</p>
+            )}
+            {showUsernameError && (
+              <p className="text-xs text-red-500">
+                Username must start with a letter and contain only letters and
+                numbers.
+              </p>
             )}
           </div>
 
