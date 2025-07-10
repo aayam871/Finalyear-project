@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { axiosWithRefresh } from "../axiosWithRefresh";
 
+const API_BASE_URL = "https://5aeb0071168a.ngrok-free.app"; // <-- add this
+
 const FoodList = () => {
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);

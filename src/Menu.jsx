@@ -60,7 +60,7 @@ const Menu = () => {
     };
 
     fetchData();
-  }, [cachedCategories, cachedFoods, setCachedData]);
+  }, []); // Only run once on mount
 
   const filteredFoods = useMemo(() => {
     return foods.filter((food) => {

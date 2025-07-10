@@ -51,13 +51,16 @@ const Navbar = () => {
     fetchCartIfLoggedIn();
   }, [location, setCartFromBackend]);
 
-  // Restore cart from localStorage if present
-  const localCart = localStorage.getItem("localCart");
-  if (localCart) {
-    try {
-      setCartFromBackend(JSON.parse(localCart));
-    } catch {}
-  }
+  useEffect(() => {
+    const localCart = localStorage.getItem("localCart");
+    if (localCart) {
+      try {
+        setCartFromBackend(JSON.parse(localCart));
+      } catch {}
+    }
+    // Only run on mount
+    // eslint-disable-next-line
+  }, []);
 
   const roles = user?.roles || [];
 

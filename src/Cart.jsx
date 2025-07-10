@@ -110,7 +110,7 @@ const Cart = () => {
       }
     };
     fetchCart();
-  }, [cachedFoods, setCartFromBackend]);
+  }, [cachedFoods]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const total = useMemo(
     () =>

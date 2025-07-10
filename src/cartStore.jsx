@@ -1,7 +1,16 @@
 import { create } from "zustand";
 
+const getInitialCart = () => {
+  try {
+    const stored = localStorage.getItem("localCart");
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
 export const useCartStore = create((set, get) => ({
-  cart: [],
+  cart: getInitialCart(),
 
   // Add to cart expects item with { id, variantId, quantity?, ... }
   addToCart: (item) => {

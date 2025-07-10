@@ -105,7 +105,7 @@ const CategoryList = () => {
                 ...cat,
                 name: editForm.name,
                 description: editForm.description,
-                imageUrl: updatedImageUrl,
+                imageUrl: editForm.imageUrl, // <-- fix here
               }
             : cat
         )
