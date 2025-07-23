@@ -7,7 +7,6 @@ const navItems = [
   { to: "/delivery-agent/order-history", label: "Order History" },
   { to: "/delivery-agent/cod-management", label: "COD Money Management" },
   { to: "/delivery-agent/map-navigation", label: "Map Navigation" },
-  { to: "/delivery-agent/delivery-charges", label: "Delivery Charges" },
 ];
 
 const Sidebar = () => (
