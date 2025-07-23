@@ -23,17 +23,36 @@ const Login = () => {
 
   // If user is already logged in, redirect based on role
   useEffect(() => {
+    console.log("Login useEffect running on", location.pathname);
+    if (location.pathname !== "/login") return; // Only run on /login page
+
     const user = JSON.parse(localStorage.getItem("user"));
     if (user && user.roles) {
-      if (user.roles.includes("ROLE_ADMIN")) {
+      if (
+        (Array.isArray(user.roles) && user.roles.includes("ROLE_ADMIN")) ||
+        user.roles === "ROLE_ADMIN"
+      ) {
         navigate("/admin");
-      } else if (user.roles.includes("ROLE_AGENT")) {
-        navigate("/delivery-home");
-      } else if (user.roles.includes("ROLE_CUSTOMER")) {
+      } else if (
+        (Array.isArray(user.roles) &&
+          user.roles.includes("ROLE_DELIVERYAGENT")) ||
+        user.roles === "ROLE_AGENT"
+      ) {
+        navigate("/delivery-agent");
+      } else if (
+        (Array.isArray(user.roles) &&
+          user.roles.includes("ROLE_RESTURANTSTAFF")) ||
+        user.roles === "ROLE_RESTURANTSTAFF"
+      ) {
+        navigate("/staff-dashboard");
+      } else if (
+        (Array.isArray(user.roles) && user.roles.includes("ROLE_CUSTOMER")) ||
+        user.roles === "ROLE_CUSTOMER"
+      ) {
         navigate("/customer-home");
       }
     }
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -49,7 +68,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        "https://5aeb0071168a.ngrok-free.app/api/v1/auth/login",
+        "https://519862b3b376.ngrok-free.app/api/v1/auth/login",
         { username, password },
         {
           headers: {
@@ -84,17 +103,17 @@ const Login = () => {
 
         toast.success(`Welcome back, ${resUsername}!`);
 
-        setTimeout(() => {
-          if (roles.includes("ROLE_ADMIN")) {
-            navigate("/admin/add-food");
-          } else if (roles.includes("ROLE_AGENT")) {
-            navigate("/delivery-home");
-          } else if (roles.includes("ROLE_CUSTOMER")) {
-            navigate("/customer-home");
-          } else {
-            navigate("/login");
-          }
-        }, 300);
+        if (roles.includes("ROLE_ADMIN")) {
+          navigate("/admin");
+        } else if (roles.includes("ROLE_DELIVERYAGENT")) {
+          navigate("/delivery-agent");
+        } else if (roles.includes("ROLE_RESTURANTSTAFF")) {
+          navigate("/staff-dashboard"); // Staff ko dashboard pathaune
+        } else if (roles.includes("ROLE_CUSTOMER")) {
+          navigate("/customer-home");
+        } else {
+          navigate("/login");
+        }
       } else {
         toast.error(result.errorMessage || "Login failed.");
       }

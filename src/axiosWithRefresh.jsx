@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Backend base URL
-const BASE_URL = "https://5aeb0071168a.ngrok-free.app";
+const BASE_URL = "https://519862b3b376.ngrok-free.app";
 
 // Main function for protected requests
 export const axiosWithRefresh = async (config) => {

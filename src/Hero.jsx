@@ -1,20 +1,17 @@
 import React, { useState, useEffect } from "react";
 import Agent from "./images/Agent.png";
 import { motion } from "framer-motion";
-import { addToCartHandler } from "./addToCartHandler";
 import { useCartStore } from "./cartStore";
-import toast from "react-hot-toast";
+import { toast } from "react-toastify";
 
-const BASE_URL = "https://5aeb0071168a.ngrok-free.app";
+const BASE_URL = "https://519862b3b376.ngrok-free.app";
 const baseImageURL = `${BASE_URL}/uploads/images/foodItemImages/`;
 
 const SearchResultItem = ({ item, onAddToCart }) => {
   const [selectedVariantId, setSelectedVariantId] = useState(
     item.foodVariants?.[0]?.id || null
   );
-  const [justAdded, setJustAdded] = useState(false);
-  const [buttonDisabled, setButtonDisabled] = useState(false);
-  const { cart, setCartFromBackend } = useCartStore();
+  const { cart } = useCartStore();
 
   const alreadyInCart = cart.some(
     (cartItem) =>
@@ -22,6 +19,14 @@ const SearchResultItem = ({ item, onAddToCart }) => {
       (cartItem.foodVariantId === selectedVariantId ||
         cartItem.variantId === selectedVariantId)
   );
+
+  const handleClick = () => {
+    if (alreadyInCart) {
+      toast.warn("Item already in cart");
+      return;
+    }
+    onAddToCart({ ...item, selectedVariantId });
+  };
 
   return (
     <li className="flex flex-col space-y-2 bg-gray-50 p-4 rounded-lg shadow-sm">
@@ -60,38 +65,15 @@ const SearchResultItem = ({ item, onAddToCart }) => {
       )}
 
       <button
-        onClick={async () => {
-          if (alreadyInCart) {
-            toast("Item already in cart", {
-              icon: "⚠️",
-              style: {
-                background: "#fff7ed",
-                border: "1px solid #f97316",
-                color: "#d97706",
-              },
-            });
-            return;
-          }
-          await addToCartHandler({
-            food: item,
-            selectedVariantId,
-            setJustAdded,
-            setButtonDisabled,
-            setCartFromBackend,
-          });
-        }}
-        disabled={justAdded || alreadyInCart || buttonDisabled}
+        onClick={handleClick}
+        disabled={alreadyInCart}
         className={`mt-1 text-sm text-white ${
-          justAdded || alreadyInCart
-            ? "bg-green-500"
-            : "bg-orange-500 hover:bg-orange-600"
+          alreadyInCart ? "bg-green-500" : "bg-orange-500 hover:bg-orange-600"
         } px-3 py-1 rounded-full ${
-          justAdded || alreadyInCart || buttonDisabled
-            ? "opacity-70 cursor-not-allowed"
-            : ""
+          alreadyInCart ? "opacity-70 cursor-not-allowed" : ""
         }`}
       >
-        {justAdded || alreadyInCart ? "✔ Added" : "Add to Cart"}
+        {alreadyInCart ? "✔ Added" : "Add to Cart"}
       </button>
     </li>
   );
@@ -141,7 +123,7 @@ const Hero = () => {
   const handleAddToCart = async (food) => {
     const userData = localStorage.getItem("user");
     if (!userData) {
-      toast.error("Please login as Customer or Admin to order.");
+      toast.error("You must be logged in to order.");
       return;
     }
 
@@ -179,7 +161,7 @@ const Hero = () => {
         return;
       }
 
-      toast.success(`${food.name} added to cart!`);
+      toast.success(`${food.name} has been added to the cart.`);
 
       // Fetch updated cart from backend
       const cartRes = await fetch(`${BASE_URL}/api/v1/cart`, {
@@ -224,7 +206,7 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
-            className="text-gray-900 text-lg font-medium font-poppins tracking-wide mb-8 max-w-lg"
+            className="text-gray-700 text-lg font-medium  tracking-wide mb-8 max-w-lg"
           >
             Delivered hot and fresh. <br />
             No delays, No compromises.

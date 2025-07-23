@@ -6,24 +6,24 @@ const Confirmation = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-300 via-orange-400 to-orange-500 p-6">
-      <div className="bg-white rounded-2xl shadow-xl p-10 max-w-md w-full text-center">
-        <CheckCircle className="text-orange-500 mx-auto mb-4" size={48} />
-        <h1 className="text-3xl font-bold text-orange-700 mb-2">
-          Order Placed Successfully!
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-400 via-orange-500 to-yellow-300 p-6">
+      <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full text-center border border-orange-200">
+        <CheckCircle className="text-amber-600 mx-auto mb-5" size={56} />
+        <h1 className="text-3xl font-semibold text-orange-800 mb-3">
+          Your Order Has Been Placed!
         </h1>
-        <p className="text-gray-700 text-base mb-4">
-          Thank you for your order. <br /> Our delivery agent will reach you
-          shortly.
+        <p className="text-gray-700 text-base mb-3 leading-relaxed">
+          Thank you for choosing us. Our kitchen is preparing your meal with
+          care, and a delivery agent will be on the way shortly.
         </p>
         <p className="text-gray-500 text-sm mb-6">
-          Please keep your phone nearby and be ready to receive your food.
+          Please ensure your phone is reachable for any delivery updates.
         </p>
         <button
           onClick={() => navigate("/")}
-          className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-medium transition duration-300"
+          className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2.5 rounded-lg font-medium tracking-wide transition duration-300 shadow-sm"
         >
-          Back to Home
+          Return to Homepage
         </button>
       </div>
     </div>

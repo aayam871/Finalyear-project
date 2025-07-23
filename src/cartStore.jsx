@@ -58,7 +58,10 @@ export const useCartStore = create((set, get) => ({
     }
   },
 
-  clearCart: () => set({ cart: [] }),
+  clearCart: () => {
+    set({ cart: [] });
+    localStorage.removeItem("localCart");
+  },
 
   // Normalize backend items before setting cart state
   setCartFromBackend: (backendItems) => {

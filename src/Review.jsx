@@ -69,34 +69,51 @@ const agents = [
 
 const ReviewCard = ({ name, text, rating }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5 }}
-    className="bg-orange-100 p-6 rounded-2xl shadow-md max-w-xl mx-auto"
+    initial={{ opacity: 0, y: 40, scale: 0.95, rotate: -2 }}
+    whileInView={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
+    transition={{ duration: 0.7, type: "spring", stiffness: 60, damping: 12 }}
+    whileHover={{ scale: 1.03, boxShadow: "0 8px 32px 0 rgba(255,140,0,0.18)", rotate: 1 }}
+    className="relative bg-gradient-to-br from-orange-50 to-orange-200 p-8 rounded-3xl shadow-xl max-w-xl mx-auto border border-orange-200 group"
   >
-    <h3 className="text-orange-700 text-lg font-bold mb-2">{name}</h3>
-    <p className="text-gray-700 mb-3">"{text}"</p>
-    <div className="text-yellow-500 text-xl">{renderStars(rating)}</div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 0.12 }}
+      transition={{ duration: 1, delay: 0.2 }}
+      className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-orange-300 via-orange-100 to-white pointer-events-none"
+    />
+    <h3 className="text-orange-700 text-2xl font-extrabold mb-2 tracking-wide bg-gradient-to-r from-orange-500 via-orange-700 to-yellow-400 bg-clip-text text-transparent drop-shadow-lg">
+      {name}
+    </h3>
+    <p className="text-gray-800 mb-4 text-lg italic font-medium leading-relaxed drop-shadow-sm">
+      “{text}”
+    </p>
+    <div className="text-yellow-500 text-2xl mb-2 flex justify-center group-hover:scale-110 transition-transform duration-300">
+      {renderStars(rating)}
+    </div>
   </motion.div>
 );
 
 
 const ArrowButtons = ({ swiperRef }) => (
   <div className="relative w-full mt-4">
-    <button
+    <motion.button
+      whileHover={{ scale: 1.15, backgroundColor: "#ea580c" }}
+      whileTap={{ scale: 0.95 }}
       aria-label="Previous slide"
       onClick={() => swiperRef.current?.slidePrev()}
       className="absolute left-2 top-1/2 -translate-y-1/2 bg-orange-500 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-orange-600 focus:outline-none shadow-md z-10"
     >
       ‹
-    </button>
-    <button
+    </motion.button>
+    <motion.button
+      whileHover={{ scale: 1.15, backgroundColor: "#ea580c" }}
+      whileTap={{ scale: 0.95 }}
       aria-label="Next slide"
       onClick={() => swiperRef.current?.slideNext()}
       className="absolute right-2 top-1/2 -translate-y-1/2 bg-orange-500 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-orange-600 focus:outline-none shadow-md z-10"
     >
       ›
-    </button>
+    </motion.button>
   </div>
 );
 
@@ -119,13 +136,13 @@ const Review = () => {
   };
 
   return (
-    <div className="py-16 px-4 md:px-20 bg-white text-gray-800" id="reviews">
+    <div className="py-20 px-4 md:px-20 bg-gradient-to-br from-orange-50 via-white to-orange-100 text-gray-800" id="reviews">
       
       <motion.h2
-        className="text-3xl font-bold text-orange-500 text-center mb-8"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
+        className="text-4xl md:text-5xl font-extrabold text-center mb-8 bg-gradient-to-r from-orange-500 via-orange-700 to-yellow-400 bg-clip-text text-transparent drop-shadow-2xl tracking-tight"
+        initial={{ opacity: 0, scale: 0.92, y: 20 }}
+        whileInView={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.7, type: "spring" }}
       >
         What Our Customers Say
       </motion.h2>
@@ -144,10 +161,10 @@ const Review = () => {
 
      
       <motion.h2
-        className="text-3xl font-bold text-orange-500 text-center mt-20 mb-8"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
+        className="text-4xl md:text-5xl font-extrabold text-center mt-20 mb-8 bg-gradient-to-r from-orange-500 via-orange-700 to-yellow-400 bg-clip-text text-transparent drop-shadow-2xl tracking-tight"
+        initial={{ opacity: 0, scale: 0.92, y: 20 }}
+        whileInView={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.7, type: "spring" }}
       >
         Reviews from Our Delivery Agents
       </motion.h2>

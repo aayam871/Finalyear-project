@@ -36,7 +36,7 @@ const Otp = () => {
     if (fullOtp.length === 6) {
       try {
         const response = await fetch(
-          "https://5aeb0071168a.ngrok-free.app/api/v1/auth/verify-otp",
+          "https://519862b3b376.ngrok-free.app/api/v1/auth/verify-otp",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -71,7 +71,7 @@ const Otp = () => {
   const handleResend = async () => {
     try {
       const response = await fetch(
-        "https://8e9f-103-167-232-13.ngrok-free.app/api/v1/auth/resend-otp",
+        "https://519862b3b376.ngrok-free.app/api/v1/auth/resend-otp",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

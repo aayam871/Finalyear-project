@@ -1,6 +1,7 @@
-import toast from "react-hot-toast";
-import { axiosWithRefresh } from "./axiosWithRefresh";
-import { useCartStore } from "./cartStore";
+import axios from "axios";
+import { toast } from "react-toastify";
+
+const BASE_URL = "https://519862b3b376.ngrok-free.app";
 
 export const addToCartHandler = async ({
   food,
@@ -11,45 +12,47 @@ export const addToCartHandler = async ({
 }) => {
   const userData = localStorage.getItem("user");
   if (!userData) {
-    toast.error("Please login to continue.");
-    return false;
+    toast.error("You must be logged in to add items to the cart.");
+    return;
   }
 
-  const user = JSON.parse(userData);
-  const token = user.accessToken;
-  if (!token) {
-    toast.error("Please login to continue.");
-    return false;
-  }
-
-  if (!selectedVariantId) {
-    toast.error("Please select a variant.");
-    return false;
-  }
+  setButtonDisabled(true);
 
   try {
-    setButtonDisabled?.(true);
+    const user = JSON.parse(userData);
+    const token = user.accessToken;
+    if (!token) {
+      toast.error("Please login again.");
+      setButtonDisabled(false);
+      return;
+    }
 
-    // Add to backend
-    const res = await axiosWithRefresh({
-      method: "POST",
-      url: "/api/v1/cart/add",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "ngrok-skip-browser-warning": "true",
-      },
-      data: {
+    if (!selectedVariantId) {
+      toast.error("Please select a variant.");
+      setButtonDisabled(false);
+      return;
+    }
+
+    const response = await axios.post(
+      `${BASE_URL}/api/v1/cart/add`,
+      {
         foodItemId: food.id,
         foodVariantId: selectedVariantId,
         quantity: 1,
       },
-    });
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      }
+    );
 
-    if (res.status === 200 || res.status === 201) {
-      // Fetch updated cart
-      const cartRes = await axiosWithRefresh({
-        method: "GET",
-        url: "/api/v1/cart",
+    if (response.status === 200 || response.status === 201) {
+      toast.success(`${food.name} has been added to the cart.`);
+      setJustAdded(true);
+
+      const cartRes = await axios.get(`${BASE_URL}/api/v1/cart`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "ngrok-skip-browser-warning": "true",
@@ -58,21 +61,19 @@ export const addToCartHandler = async ({
 
       if (Array.isArray(cartRes.data.items)) {
         setCartFromBackend(cartRes.data.items);
-        localStorage.setItem("localCart", JSON.stringify(cartRes.data.items));
       }
 
-      toast.success(`${food.name} is placed in a cart.`);
-      setJustAdded?.(true);
-      setTimeout(() => setJustAdded?.(false), 1200);
-      return true;
+      setTimeout(() => {
+        setJustAdded(false);
+        setButtonDisabled(false);
+      }, 2000);
     } else {
-      toast.error("Failed to add item to cart.");
-      return false;
+      toast.error("Failed to add item to cart");
+      setButtonDisabled(false);
     }
-  } catch (err) {
-    toast.error("Failed to add to cart.");
-    return false;
-  } finally {
-    setButtonDisabled?.(false);
+  } catch (error) {
+    console.error("Add to cart error:", error);
+    toast.error("Error adding to cart");
+    setButtonDisabled(false);
   }
 };

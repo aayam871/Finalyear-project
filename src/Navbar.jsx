@@ -5,6 +5,7 @@ import { useCartStore } from "./cartStore";
 import axios from "axios";
 import logo from "./images/QuickBites_Logo_Transparent.png";
 import icon from "./images/icon.jpeg";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Navbar = () => {
   const location = useLocation();
@@ -64,8 +65,7 @@ const Navbar = () => {
 
   const roles = user?.roles || [];
 
-  const isAdmin =
-    roles.includes("ROLE_ADMIN") && roles.includes("ROLE_CUSTOMER");
+  const isAdmin = roles.includes("ROLE_ADMIN");
   const isCustomer = roles.length === 1 && roles.includes("ROLE_CUSTOMER");
   const isAgent = roles.length === 1 && roles.includes("ROLE_AGENT");
 
@@ -108,7 +108,7 @@ const Navbar = () => {
       const user = JSON.parse(localStorage.getItem("user"));
       if (user?.accessToken) {
         await axios.post(
-          "https://5aeb0071168a.ngrok-free.app/api/v1/auth/logout",
+          "https://519862b3b376.ngrok-free.app/api/v1/auth/logout",
           {},
           {
             headers: {
@@ -134,121 +134,161 @@ const Navbar = () => {
     }
   };
 
+  // Never render Navbar for admins
+  if (isAdmin) return null;
+
   return (
-    <nav className="bg-orange-400 text-black shadow-md px-4 py-0 sticky top-0 z-50">
-      <div className="flex items-center justify-between h-20">
-        {/* Logo */}
-        <div className="flex items-center space-x-4">
-          <NavLink
-            to={getHomeRoute()}
-            onClick={(e) => handleHomeClick(e, getHomeRoute())}
+    <AnimatePresence>
+      <motion.nav
+        initial={{ y: -80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -80, opacity: 0 }}
+        transition={{ duration: 0.7, type: "spring", stiffness: 80, damping: 15 }}
+        className="bg-orange-400 text-black shadow-md px-4 py-0 sticky top-0 z-50"
+      >
+        <div className="flex items-center justify-between h-20">
+          {/* Logo */}
+          <motion.div
+            initial={{ x: -40, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.6, type: "spring" }}
+            className="flex items-center space-x-4"
           >
-            <img
-              src={logo}
-              alt="QuickBites Logo"
-              className="h-16 drop-shadow-md cursor-pointer"
-            />
-          </NavLink>
-        </div>
+            <NavLink
+              to={getHomeRoute()}
+              onClick={(e) => handleHomeClick(e, getHomeRoute())}
+            >
+              <img
+                src={logo}
+                alt="QuickBites Logo"
+                className="h-16 drop-shadow-md cursor-pointer"
+              />
+            </NavLink>
+          </motion.div>
 
-        <ul className="hidden md:flex space-x-12 font-semibold text-lg">
-          {navItems.map(({ to, label }) => (
-            <li key={to} className="relative">
-              <NavLink
-                to={to}
-                onClick={(e) => handleHomeClick(e, to)}
-                className={({ isActive }) =>
-                  `transition-colors duration-300 ${
-                    isActive ? "text-orange-800" : "hover:text-orange-800"
-                  }`
-                }
+          <motion.ul
+            className="hidden md:flex space-x-12 font-semibold text-lg"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {},
+              visible: {
+                transition: {
+                  staggerChildren: 0.12,
+                  delayChildren: 0.4,
+                },
+              },
+            }}
+          >
+            {navItems.map(({ to, label }, idx) => (
+              <motion.li
+                key={to}
+                className="relative"
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.5 + idx * 0.12 }}
               >
-                {({ isActive }) => (
-                  <span className="relative">
-                    {label}
-                    {isActive && (
-                      <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-orange-800 animate-scale-in origin-left" />
-                    )}
-                  </span>
-                )}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
+                <NavLink
+                  to={to}
+                  onClick={(e) => handleHomeClick(e, to)}
+                  className={({ isActive }) =>
+                    `transition-colors duration-300 ${
+                      isActive ? "text-orange-800" : "hover:text-orange-800"
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <span className="relative">
+                      {label}
+                      {isActive && (
+                        <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-orange-800 animate-scale-in origin-left" />
+                      )}
+                    </span>
+                  )}
+                </NavLink>
+              </motion.li>
+            ))}
+          </motion.ul>
 
-        <div className="ml-2 relative flex items-center space-x-4">
-          {isLoggedIn && user?.username && (
-            <span className="text-white font-semibold mr-2 hidden md:inline-block">
-              Welcome, {user.username}!
-            </span>
-          )}
-
-          {isLoggedIn &&
-            (primaryRole === "CUSTOMER" || primaryRole === "ADMIN") && (
-              <div
-                className="relative cursor-pointer text-white"
-                onClick={() => navigate("/cart")}
-              >
-                <FiShoppingCart size={24} />
-                {totalItems > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                    {totalItems}
-                  </span>
-                )}
-              </div>
+          <motion.div
+            className="ml-2 relative flex items-center space-x-4"
+            initial={{ x: 40, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.6, type: "spring" }}
+          >
+            {isLoggedIn && user?.username && (
+              <span className="text-white font-semibold mr-2 hidden md:inline-block">
+                Welcome, {user.username}!
+              </span>
             )}
 
-          {isLoggedIn ? (
-            <div className="group relative">
-              <img
-                src={icon}
-                alt="Profile"
-                className="h-10 w-10 rounded-full cursor-pointer border-2 border-white"
-              />
-              <div className="absolute right-0 mt-2 bg-white text-black rounded-md shadow-md p-3 w-48 hidden group-hover:block z-50">
-                {primaryRole === "ADMIN" && (
+            {isLoggedIn &&
+              (primaryRole === "CUSTOMER" || primaryRole === "ADMIN") && (
+                <div
+                  className="relative cursor-pointer text-white"
+                  onClick={() => navigate("/cart")}
+                >
+                  <FiShoppingCart size={24} />
+                  {totalItems > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                      {totalItems}
+                    </span>
+                  )}
+                </div>
+              )}
+
+            {isLoggedIn ? (
+              <div className="group relative">
+                <img
+                  src={icon}
+                  alt="Profile"
+                  className="h-10 w-10 rounded-full cursor-pointer border-2 border-white"
+                />
+                <div className="absolute right-0 mt-2 bg-white text-black rounded-md shadow-md p-3 w-48 hidden group-hover:block z-50">
+                  {primaryRole === "ADMIN" && (
+                    <NavLink
+                      to="/admin/add-food"
+                      className="block py-2 px-3 hover:bg-orange-100 rounded-md"
+                    >
+                      Dashboard
+                    </NavLink>
+                  )}
+
+                  {(primaryRole === "CUSTOMER" || primaryRole === "AGENT") && (
+                    <NavLink
+                      to={getOrdersLink()}
+                      className="block py-2 px-3 hover:bg-orange-100 rounded-md"
+                    >
+                      Orders
+                    </NavLink>
+                  )}
+
                   <NavLink
-                    to="/admin/add-food"
+                    to={getProfileLink()}
                     className="block py-2 px-3 hover:bg-orange-100 rounded-md"
                   >
-                    Dashboard
+                    My Profile
                   </NavLink>
-                )}
-
-                {(primaryRole === "CUSTOMER" || primaryRole === "AGENT") && (
-                  <NavLink
-                    to={getOrdersLink()}
-                    className="block py-2 px-3 hover:bg-orange-100 rounded-md"
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left py-2 px-3 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-md"
                   >
-                    Orders
-                  </NavLink>
-                )}
-
-                <NavLink
-                  to={getProfileLink()}
-                  className="block py-2 px-3 hover:bg-orange-100 rounded-md"
-                >
-                  My Profile
-                </NavLink>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left py-2 px-3 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-md"
-                >
-                  Logout
-                </button>
+                    Logout
+                  </button>
+                </div>
               </div>
-            </div>
-          ) : (
-            <NavLink
-              to="/login"
-              className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-full text-base font-semibold transition-all duration-300 shadow-sm hover:shadow-md"
-            >
-              Login
-            </NavLink>
-          )}
+            ) : (
+              <NavLink
+                to="/login"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-full text-base font-semibold transition-all duration-300 shadow-sm hover:shadow-md"
+              >
+                Login
+              </NavLink>
+            )}
+          </motion.div>
         </div>
-      </div>
-    </nav>
+      </motion.nav>
+    </AnimatePresence>
   );
 };
 
