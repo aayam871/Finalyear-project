@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from "react";
+import { axiosDelivery } from "../api/axiosDelivery";
 
 const AssignedOrders = () => {
   const [orders, setOrders] = useState([]);
-
   useEffect(() => {
-    fetch("/agent/history")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "success" && data.data) {
-          setOrders(data.data);
+    const fetchOrders = async () => {
+      try {
+        const res = await axiosDelivery({ method: "get", url: "/agent/history" });
+        if (res.data && res.data.status === "success" && res.data.data) {
+          setOrders(res.data.data);
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching assigned orders:", error);
-      });
+      }
+    };
+    fetchOrders();
   }, []);
-
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Assigned Orders</h2>
@@ -25,7 +25,9 @@ const AssignedOrders = () => {
           <div key={order.orderId} className="flex justify-between items-center border-b py-2">
             <div>
               <div className="font-semibold">Order #{order.orderId}</div>
-              <div className="text-gray-600 text-sm">{order.customerName} - {order.deliveryAddress}</div>
+              <div className="text-gray-600 text-sm">
+                {order.customerName} - {order.deliveryAddress}
+              </div>
               <div className="text-gray-600 text-sm">Total: Rs.{order.totalAmount}</div>
             </div>
             <button className="bg-blue-600 text-white px-4 py-1 rounded">Details</button>
