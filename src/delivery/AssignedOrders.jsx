@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from "react";
+import { axiosWithRefresh } from "../axiosWithRefresh";
 
 const AssignedOrders = () => {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    fetch("/agent/history")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "success" && data.data) {
-          setOrders(data.data);
+    const fetchOrders = async () => {
+      try {
+        const res = await axiosWithRefresh({ method: "get", url: "/agent/history" });
+        if (res.data.status === "success" && res.data.data) {
+          setOrders(res.data.data);
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching assigned orders:", error);
-      });
+      }
+    };
+
+    fetchOrders();
   }, []);
 
   return (

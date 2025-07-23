@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { axiosWithRefresh } from "../axiosWithRefresh";
 
 const Dashboard = () => {
   const [summary, setSummary] = useState({
@@ -9,16 +10,18 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    fetch("/agent/summary")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "success" && data.data) {
-          setSummary(data.data);
+    const fetchSummary = async () => {
+      try {
+        const res = await axiosWithRefresh({ method: "get", url: "/agent/summary" });
+        if (res.data.status === "success" && res.data.data) {
+          setSummary(res.data.data);
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching dashboard summary:", error);
-      });
+      }
+    };
+
+    fetchSummary();
   }, []);
 
   return (

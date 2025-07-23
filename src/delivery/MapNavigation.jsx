@@ -10,9 +10,12 @@ const MapNavigation = () => {
     fetch("/api/route")
       .then((res) => res.json())
       .then((data) => {
+        console.log("Fetched route data:", data);
         if (data && data.length >= 2) {
           setStart({ lat: data[0].lat, lon: data[0].lon });
           setEnd({ lat: data[1].lat, lon: data[1].lon });
+        } else {
+          console.error("Invalid route data received:", data);
         }
       })
       .catch((error) => {

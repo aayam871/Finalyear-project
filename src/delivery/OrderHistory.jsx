@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from "react";
+import { axiosWithRefresh } from "../axiosWithRefresh";
 
 const OrderHistory = () => {
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    fetch("/agent/history")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "success" && data.data) {
-          setHistory(data.data);
+    const fetchHistory = async () => {
+      try {
+        const res = await axiosWithRefresh({ method: "get", url: "/agent/history" });
+        if (res.data.status === "success" && res.data.data) {
+          setHistory(res.data.data);
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching delivery history:", error);
-      });
+      }
+    };
+
+    fetchHistory();
   }, []);
 
   return (
